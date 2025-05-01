@@ -1,0 +1,260 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat Alternates";
+}
+
+body{
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px;
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+
+/*MENU*/
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+
+}
+
+.chatbot{
+    display: flex;
+    gap: 1px;
+    flex-direction: row;
+    text-decoration: none;
+}
+
+.texto-chatbot{
+    text-decoration: none;
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color:  #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px;
+}
+
+.link-categorias{
+    text-decoration: none;
+}
+
+.categorias{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.link-pedidos{
+    text-decoration: none;
+}
+
+.pedidos{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    
+}
+
+.icone-carrinho{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.icone-user{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.container{
+    margin: 30px 10% 5px 10%;
+}
+
+h2{
+    margin-bottom: 10px;
+}
+
+.cartao-container {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 10px;
+    border: 1px solid #4856ED;
+    border-radius: 20px;
+
+}
+
+.cartao-container h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+}
+
+.input-container {
+    margin-bottom: 8px;
+    display: flex;
+    /*gap: 1px;*/
+    flex-direction: column;
+}
+
+.info-cartao{
+    display: flex;
+    gap: 30px;
+    flex-direction: row;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.input-container label {
+    display: inline-block;
+    width: 100%;
+    font-weight: bold;
+    padding-left: 10px;
+    
+}
+
+.input-container input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #4856ED;
+    border-radius: 20px;
+    box-sizing: border-box;
+    margin-bottom: 5px;
+    padding-left: 15px;
+    font-family: "Montserrat Alternates";
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.checkbox-container {
+    margin-bottom: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-right: 5px;
+}
+
+.buttons-container {
+    margin-top: 20px;
+    font-family: "Montserrat Alternates";
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.salvar-button, .voltar-button, .link-adicionar {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 18px;
+    font-family: "Montserrat Alternates";
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.salvar-button {
+    background-color: #008CBA; /* Azul diferente para cartões */
+    color: white;
+}
+
+.salvar-button:hover {
+    background-color: #005f7a;
+}
+
+.voltar-button {
+    background-color: #f44336;
+    color: white;
+    margin-left: 10px;
+}
+
+.voltar-button:hover {
+    background-color: #d32f2f;
+}
+
+.link-adicionar {
+    background-color: #2BAA15;
+    color: white;
+    margin-left: 10px;
+    text-decoration: none;
+}
+
+.link-adicionar:hover {
+    background-color: #4cae4c;
+}
+
+.no-cartoes {
+    color: red;
+    font-style: italic;
+}

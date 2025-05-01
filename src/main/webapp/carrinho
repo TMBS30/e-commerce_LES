@@ -1,0 +1,221 @@
+<%@ page import="java.util.*" %>
+<%@ page import="dominio.*" %>
+<%@ page import="dao.*" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.ArrayList" %>
+
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carrinho | PageStation</title>
+    <link rel="stylesheet" type="text/css" href="css/carrinho.css?v=<%= System.currentTimeMillis() %>"">
+</head>
+<body>
+    <header>
+        <a href="servlet?action=voltarHomePage" class="logo-link">
+            <h1>PageStation</h1>
+            <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
+        </a>
+    </header>
+
+    <main>
+        <div class="menu-fixo">
+            <a href="#" class="chatbot">
+                <p class="texto-chatbot">ChatBot</p>
+                <img class="icone-chatbot"src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
+            </a>
+
+            <div class="input-pesquisa_livro">
+                <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
+            </div>
+
+            <a href="#" class="link-categorias">
+                <p class="categorias">Categorias</p>
+            </a>
+
+            <a href="#" class="link-pedidos">
+                <p class="pedidos">Pedidos</p>
+            </a>
+
+            <a href="carrinho.jsp" class="link-carrinho">
+                <img class="icone-carrinho" src="Imagens/Icone - Carrinho.svg" alt="Icone Carrinho de Compras">
+            </a>
+
+            <a href="servlet?action=consultarInfoPessoais" class="link-user">
+                <img class="icone-user" src="Imagens/Icone - User.svg" alt="Icone Consultar Informacoes Cadastrais">
+            </a>
+        </div>
+
+        <h2 class="carrrinho">Meu Carrinho</h2>
+        <div class="container">
+            <div class="lista-de-itens-carrinho">
+                <%
+                Integer clienteId = (Integer) session.getAttribute("clienteId");
+
+                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                Carrinho carrinho = carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
+                List<CarrinhoItem> itensCarrinho = (carrinho != null) ? carrinho.getItens() : new ArrayList<>();
+
+                double subtotal = 0;
+                double frete = 0.0;
+
+                if (itensCarrinho.isEmpty()) {
+                %>
+                    <p>Seu carrinho esta vazio!</p>
+                <%
+                } else {
+                    frete = 20.0;
+                    for (CarrinhoItem item : itensCarrinho) {
+                        Livro livro = item.getItem().getLivro();
+                        double precoUnitario = item.getItem().getValorVenda();
+                        double precoTotalItem = precoUnitario * item.getQuantidade();
+                        subtotal += precoTotalItem;
+                %>
+
+                        <div class="item-carrinho">
+                            <div class="info-livro">
+                                <div class="imagem-livro">
+                                    <img src="<%= livro.getCaminhoImagem() %>" alt="<%= livro.getTitulo() %>">
+                                </div>
+                                <div>
+                                    <p style="color: red;">ID do item: <%= item.getId() %></p>
+                                    <div class="titulo-com-botao">
+                                        <h3 class="titulo"><%= livro.getTitulo() %></h3>
+                                        <form action="servlet" method="post" onsubmit="return confirmarExclusao('<%= item.getId() %>');">
+                                            <input type="hidden" name="action" value="removerItemCarrinho">
+                                            <input type="hidden" name="id" value="<%= item.getId() %>">
+                                            <button type="submit" class="excluir-btn">Excluir Item</button>
+                                        </form>
+                                    </div>
+                                    <p class="editora">Editora: <%= livro.getEditora().getNome() %></p>
+                                    <div class="quantidade-container">
+                                        <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, -1, '<%= item.getId() %>')">-</button>
+                                        <input type="text" class="visor-quantidade" value="<%= item.getQuantidade() %>" min="1" readonly>
+                                        <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, 1, '<%= item.getId() %>')">+</button>
+                                    </div>
+                                    <p class="preco-total">Total: R$ <%= String.format("%.2f", precoTotalItem) %></p>
+                                </div>
+                            </div>
+                        </div>
+                <%
+                    }
+                }
+                %>
+            <div class="resumo-compra">
+                <h2 class="resumo-compra">Resumo da Compra</h2>
+                <p>Subtotal: R$ <%= String.format("%.2f", subtotal) %></p>
+                <div class="frete-container">
+                    <h2>Escolha o Frete</h2>
+                    <select name="tipoFrete" onchange="atualizarTotalComFrete(this.value)">
+                        <option value="<%= TipoFrete.EXPRESS.getDescricao() %>"><%= TipoFrete.EXPRESS %></option>
+                        <option value="<%= TipoFrete.PADRAO.getDescricao() %>"><%= TipoFrete.PADRAO %></option>
+                        <option value="<%= TipoFrete.ECONOMICO.getDescricao() %>"><%= TipoFrete.ECONOMICO %></option>
+                    </select>
+                    <p id="valorFrete">
+                        <% if (session.getAttribute("previaPedidoValorFrete") != null) { %>
+                            Frete: R$ <%= String.format("%.2f", session.getAttribute("previaPedidoValorFrete")) %>
+                        <% } else { %>
+                            Frete: Selecione o tipo de frete
+                        <% } %>
+                    </p>
+                </div>
+
+                <div class="cupom-container">
+                    <p>Cupom: - R$ <%= String.format("%.2f", (session.getAttribute("cupomSelecionado") != null ? ((Cupom)session.getAttribute("cupomSelecionado")).getValor() : 0.00)) %></p>
+                    <a href="servlet?action=exibirCupons">Ver meus cupons</a>
+                </div>
+
+                <p><strong>Total: R$ <span id="valorTotalCompra"><%= String.format("%.2f", subtotal + (session.getAttribute("previaPedidoValorFrete") != null ? (Double)session.getAttribute("previaPedidoValorFrete") : 0.00) - (session.getAttribute("cupomSelecionado") != null ? ((Cupom)session.getAttribute("cupomSelecionado")).getValor() : 0.00)) %></span></strong></p>
+                <form action="servlet" method="post">
+                    <input type="hidden" name="action" value="salvarPreviaPedido">
+                    <input type="hidden" id="tipoFreteSelecionado" name="tipoFreteSelecionado" value="">
+                    <button type="submit" class="finalizar-compra-btn">Finalizar Compra</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function alterarQuantidade(button, delta, itemId) {
+            const inputQuantidade = button.parentNode.querySelector('.visor-quantidade');
+            let quantidadeAtual = parseInt(inputQuantidade.value);
+            quantidadeAtual += delta;
+            if (quantidadeAtual < 1) quantidadeAtual = 1;
+            inputQuantidade.value = quantidadeAtual;
+
+            fetch('servlet', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=alterarQuantidade&itemId=${itemId}&quantidade=${quantidadeAtual}`
+            })
+            .then(response => {
+                if (!response.ok) {
+                    console.error('Erro ao atualizar quantidade:', response.status);
+                    // Exibir mensagem de erro visual para o usuário (opcional)
+                    return Promise.reject(`Erro na requisição: ${response.status}`);
+                }
+                return response.json(); // Espera uma resposta JSON do servidor
+            })
+            .then(data => {
+                if (data && data.precoTotalItem && data.subtotal && data.totalCompra) {
+                    // Atualize o preço total do item na linha correspondente
+                    const itemContainer = button.closest('.item-carrinho');
+                    const precoTotalElement = itemContainer.querySelector('.preco-total');
+                    if (precoTotalElement) {
+                        precoTotalElement.textContent = `Total: R$ ${parseFloat(data.precoTotalItem).toFixed(2)}`;
+                    }
+
+                    // Atualize o subtotal e o total da compra no resumo
+                    const subtotalElement = document.querySelector('.resumo-compra > p:first-child');
+                    const totalElement = document.querySelector('.resumo-compra > p:last-child > strong');
+                    if (subtotalElement && totalElement) {
+                        subtotalElement.textContent = `Subtotal: R$ ${parseFloat(data.subtotal).toFixed(2)}`;
+                        totalElement.textContent = `Total: R$ ${parseFloat(data.totalCompra).toFixed(2)}`;
+                    }
+                } else {
+                    console.warn('Resposta JSON inválida:', data);
+                    // Exibir mensagem de aviso visual para o usuário (opcional)
+                }
+            })
+            .catch(error => {
+                console.error('Erro geral:', error);
+                // Exibir mensagem de erro visual para o usuário (opcional)
+            });
+        }
+
+        function confirmarExclusao(itemId) {
+            return confirm("Tem certeza que deseja excluir este item do carrinho?");
+        }
+
+        function atualizarTotalComFrete(tipoFreteDescricao) {
+            let valorFrete = 0.0;
+            if (tipoFreteDescricao === '<%= TipoFrete.EXPRESS.getDescricao() %>') {
+                valorFrete = <%= TipoFrete.EXPRESS.getValor() %>;
+            } else if (tipoFreteDescricao === '<%= TipoFrete.PADRAO.getDescricao() %>') {
+                valorFrete = <%= TipoFrete.PADRAO.getValor() %>;
+            } else if (tipoFreteDescricao === '<%= TipoFrete.ECONOMICO.getDescricao() %>') {
+                valorFrete = <%= TipoFrete.ECONOMICO.getValor() %>;
+            }
+
+            document.getElementById('valorFrete').textContent = `Frete: R$ ${valorFrete.toFixed(2)}`;
+
+            const subtotal = <%= subtotal %>;
+            const desconto = <%= session.getAttribute("cupomSelecionado") != null ? ((Cupom)session.getAttribute("cupomSelecionado")).getValor() : 0.00 %>;
+            const total = subtotal + valorFrete - desconto;
+
+            document.getElementById('valorTotalCompra').textContent = `${total.toFixed(2)}`;
+            document.getElementById('tipoFreteSelecionado').value = tipoFreteDescricao;
+        }
+
+        window.onload = function() {
+            const selectFrete = document.querySelector('select[name="tipoFrete"]');
+            if (selectFrete && selectFrete.value) {
+                atualizarTotalComFrete(selectFrete.value);
+            }
+        };
+    </script>
+</body>
+</html>

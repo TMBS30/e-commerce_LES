@@ -1,0 +1,532 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px;
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+h2{
+    text-align: left;
+    color: #000;
+    margin-top: 20px;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    /*margin-bottom: -30px;*/
+}
+
+
+/*MENU*/
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+
+}
+
+.chatbot{
+    display: flex;
+    gap: 1px;
+    flex-direction: row;
+    text-decoration: none;
+}
+
+.texto-chatbot{
+    text-decoration: none;
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color:  #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px;
+}
+
+.link-categorias{
+    text-decoration: none;
+}
+
+.categorias{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.link-pedidos{
+    text-decoration: none;
+}
+
+.pedidos{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-carrinho{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.icone-user{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.conteudo{
+    padding: 50px 10% 0px 10%;
+    /*display: flex;*/
+
+}
+
+.produto-info-compra {
+    display: flex; /* Alinha imagem e detalhes lado a lado */
+    margin: 20px; /* Adiciona margem ao redor */
+    align-items: flex-start; /* Alinha os itens no topo verticalmente */
+}
+
+.imagem-livro {
+    margin-right: 20px; /* Espaço entre a imagem e os detalhes */
+    max-width: 150px; /* Ajuste o tamanho da imagem conforme necessário */
+    max-height: 225px; /* Ajuste o tamanho da imagem conforme necessário */
+}
+
+.imagem-livro img {
+    display: block; /* Remove espaço extra abaixo da imagem */
+    width: 230px;
+    height: auto;
+}
+
+/* Container para o título e preço */
+.detalhes-compra {
+    display: flex;
+    flex-direction: column; /* Organiza título e preço verticalmente */
+    justify-content: flex-start; /* Alinha ao topo */
+    margin-left: 135px; /* Adiciona espaço à esquerda */
+}
+
+.titulo {
+    color: #1A1A1A;
+    font-size: 50px; /* Aumente o tamanho do título se desejar */
+    font-weight: bold;
+    margin-bottom: 5px; /* Espaço entre título e preço */
+    text-align: center; /* Alinha o texto à esquerda */
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    font-family: "Montserrat Alternates";
+    text-align: left;
+}
+
+.preco {
+    color: #090909;
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin-top: 65px;
+    margin-bottom: 10px; /* Espaço entre preço e controles */
+    text-align: left; /* Alinha o texto à esquerda */
+    font-family: "Montserrat Alternates";
+}
+
+/* Container para alinhar quantidade e botão comprar */
+.controle-comprar {
+    display: flex;
+    align-items: center; /* Alinha verticalmente os controles e o botão */
+    gap: 10px; /* Espaço entre os controles e o botão */
+    margin-bottom: 15px; /* Espaço abaixo dos botões de quantidade/comprar */
+    margin-top: 65px;
+}
+
+/* Estilos para o container de quantidade (já existem, ajuste se necessário) */
+.quantidade-container {
+    display: flex;
+    align-items: center;
+    
+}
+
+.botao-quantidade {
+    width: 70px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1px solid #373F9A;
+    background: #FFF;
+    color: #1A1A1A;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 35px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-right: 51px;
+}
+
+.visor-quantidade{
+    width: 70px;
+    height: 80px;
+    flex-shrink: 0;
+    border-radius: 5px;
+    border: 1px solid #373F9A;
+    background: #FFF;
+    color: #1A1A1A;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 35px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-right: 51px;
+}
+
+
+
+/* Estilos para o botão comprar (já existem, ajuste se necessário) */
+.botao-comprar {
+    background: #2BAA15;
+    border: none;
+    padding: 10px 15px;
+    width: 435px;
+    height: 80px;
+    flex-shrink: 0;
+    display: inline-block;
+    cursor: pointer;
+    border-radius: 5px;
+    color: white;
+    font-family: "Montserrat Alternates";
+    text-align: center;
+    text-decoration: none;
+    font-size: 35px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.botao-comprar:hover {
+    background-color: #218838;
+}
+
+.frete-label-input {
+    display: flex; /* Para alinhar label e input horizontalmente inicialmente */
+    flex-direction: column; /* Altera para vertical, colocando label acima */
+    margin-right: 10px; /* Espaço entre label/input e o botão calcular */
+}
+
+/* Estilos para a seção de cálculo de frete */
+.frete-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px; /* Espaço abaixo do frete */
+    margin-left: 190px; /* Adiciona espaço à esquerda */
+}
+
+.label-cep {
+    color: #484F99;
+    text-align: left;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin-bottom: 5px;
+    display: block;
+}
+
+.input-cep {
+    padding: 8px;
+    border: 1px solid #373F9A;
+    border-radius: 20px;
+    width: 265px;
+    height: 60px;
+    flex-shrink: 0;
+    fill: #FFF;
+    color: #8F8F8F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.botao-calcular {
+    background-color: #4856ED; /* Cor azul para calcular */
+    color: white;
+    border: none;
+    width: 145px;
+    height: 60px;
+    flex-shrink: 0;
+    padding: 8px 15px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    cursor: pointer;
+    font-family: "Montserrat Alternates";
+    border-radius: 5px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    margin-top: 28px;
+    margin-left: 15px;
+}
+
+.botao-calcular:hover {
+    background-color: #0056b3;
+}
+
+.acoes-carrinho {
+    display: flex; /* Alinha frete e adicionar na mesma linha */
+    align-items: flex-start; /* Alinha ao topo */
+    gap: 10px; /* Espaço entre as seções de frete e adicionar */
+    margin-left: 135px; /* Mantém o espaço à esquerda */
+    margin-top: 10px; /* Adiciona espaço acima desta seção */
+}
+
+.adicionar-container form {
+    display: inline-block; 
+}
+
+/* Estilos para o botão de adicionar ao carrinho */
+.adicionar-container {
+    margin-top: 10px; /* Espaço acima do botão adicionar */
+    margin-left: 135px; /* Adiciona espaço à esquerda */
+    align-items: center;
+}
+
+.botao-adicionar {
+    border: 4px solid #4856ED;
+    background: #FFF;
+    width: 298px;
+    height: 70px;
+    flex-shrink: 0;
+    color: #4856ED;
+    padding: 10px 20px;
+    text-align: center;
+    display: inline-block;
+    font-size: 25px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+    font-family: "Montserrat Alternates";
+    margin: 10px 10px 0px -80px;
+
+}
+
+.botao-adicionar:hover {
+    background-color: #0056b3;
+    color:white;
+}
+
+.container{
+    margin-top: 70px;
+    display: flex; /* Transforma o container em um flex container */
+    flex-wrap: wrap; /* Permite que os itens passem para a próxima linha se não houver espaço */
+    gap: 20px;
+}
+
+.input-container{
+    display: flex; /* Para alinhar label e input horizontalmente inicialmente */
+    flex-direction: column;
+    margin-bottom: 35px;
+    width: auto; /* Largura inicial automática */
+    flex-grow: 1;
+
+}
+
+.label-sinopse {
+    color: #000000;
+    text-align: left;
+    font-family: "Montserrat Alternates";
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 5px;
+    display: block;
+}
+
+textarea{
+    background: white;
+    border: none;
+    color: #000;
+    font-family: "Montserrat Alternates";
+    font-size: 30px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    width: 1136px;
+    height: 120;
+    font-style: normal;
+}
+
+.title-carac{
+    color: #000;
+    font-family: "Montserrat Alternates";
+    font-size: 40px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    text-align: left;
+    width: 1000px;
+}
+
+input{
+    fill: #FFF;
+    height: 50px;
+    border-radius: 20px;
+    border: 2px solid #373F9A;
+    padding: 18px;
+    font-size: 18px;          /* Tamanho da fonte */
+    font-family: "Montserrat Alternates", sans-serif; /* Fonte */
+    color: #000;             
+    text-align: left;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+label{
+    padding-left: 10px;
+    color: #000;
+    font-family: "Montserrat Alternates", sans-serif;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    display: block;
+}
+
+.output-categorias {
+    background: white;
+    border-radius: 20px;
+    border: 2px solid #373F9A;
+    color: #000;
+    font-family: "Montserrat Alternates", sans-serif;
+    font-size: 18px;
+    text-align: left;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 18px; /* Ajuste o padding esquerdo conforme necessário */
+    padding-top: 12px; /* Mantenha o padding vertical para espaçamento */
+    padding-bottom: 0px;
+    width: 100%;
+    height: 50px; /* Ajusta a altura automaticamente ao conteúdo */
+    min-height: 40px; /* Define uma altura mínima */
+    resize: none;
+    overflow: auto;
+}
+
+.output-autores {
+    background: white;
+    border-radius: 20px;
+    border: 2px solid #373F9A;
+    color: #000;
+    font-family: "Montserrat Alternates", sans-serif;
+    font-size: 18px;
+    text-align: left;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 18px; /* Ajuste o padding esquerdo conforme necessário */
+    padding-top: 12px; /* Mantenha o padding vertical para espaçamento */
+    padding-bottom: 0px;
+    width: 100%; /* Ocupe a largura do container pai */
+    height: 50px; /* Ajusta a altura automaticamente ao conteúdo */
+    min-height: 40px; /* Define uma altura mínima */
+    resize: none; /* Desabilita o redimensionamento */
+    overflow: auto; /* Adiciona barra de rolagem apenas quando necessário */
+}
+
+.input-container-dimensoes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 35px;
+}
+
+.input-container-dimensao-item {
+    flex-direction: column;
+    margin-bottom: 35px;
+    width: auto;
+    flex-grow: 1;
+}
+

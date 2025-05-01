@@ -1,0 +1,328 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px; 
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+h2{
+    padding-top: 0px;
+    color: #0E0E0E;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+h3{
+    color: #000;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 25px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.container {
+    background-color: #FFFFFF;
+    padding: 40px;
+    border-radius: 20px;
+    text-align: center;
+    width: 80%;
+    height: 100%;
+    margin: 0 auto;
+    padding-top: 80px;
+    text-decoration: none;
+}
+
+.title {
+    color: #4856ED;
+    font-size: 32px; /* Aumentei o tamanho da fonte */
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.store-name {
+    color: #3742D6;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.menu {
+    margin-top: 30px;
+}
+
+.menu a {
+    display: block;
+    color: #4856ED;
+    font-size: 18px;
+    text-decoration: none;
+    margin: 10px 0;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.menu a:hover {
+    color: #3742D6;
+}
+
+.links-container {
+    margin-top: 40px;
+}
+
+.links-container a {
+    color: #4856ED;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.links-container a:hover {
+    text-decoration: underline;
+}
+
+/*MENU*/
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+    
+}
+
+.chatbot{
+    display: flex;
+    gap: 1px;
+    flex-direction: row;
+    text-decoration: none;
+}
+
+.texto-chatbot{
+    text-decoration: none;
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color:  #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px;
+}
+
+.link-categorias{
+    text-decoration: none;
+}
+
+.categorias{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.link-pedidos{
+    text-decoration: none;
+}
+
+.pedidos{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-carrinho{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.icone-user{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+
+/*PRODUTOS=========================================================================*/
+.produtos{
+    display: flex;
+    gap: 100px;
+    flex-direction: row;
+    margin-top: 100px;
+     /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    justify-content: center; /* Centraliza horizontalmente */
+}
+
+.harry-potter,
+.algoritmo-logica,
+.a-cabana,
+.e-assim-que-acaba{
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+}
+
+.titulo-harry-potter,
+.titulo-algoritmo-logica,
+.titulo-a-cabana,
+.titulo-e-assim-que-acaba
+{
+    padding-top: 10px;
+    color: #1A1A1A;
+    text-align: center;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    height: 70px;
+    text-align: center;
+}
+
+.livro-item{
+    text-decoration: none; 
+    width: 140px;
+    height: 285px;
+}
+
+.titulo{
+    padding-top: 10px;
+    color: #1A1A1A;
+    text-align: center;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    height: 70px;
+    text-align: center;
+}
+
+.preco-harry-potter,
+.preco-algoritmo-logica,
+.preco-a-cabana,
+.preco-e-assim-que-acaba
+{
+    padding-top: 10px;
+    padding-bottom: 5px;
+    color: #090909;
+    text-align: center;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.preco{
+    padding-top: 10px;
+    padding-bottom: 5px;
+    color: #090909;
+    text-align: center;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.mensagem-erro {
+    color: red;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.mensagem-boas-vindas {
+    background-color: #4856ED; /* Um tom de azul claro */
+    color: #fff; /* Azul royal */
+    padding: 10px;
+    margin-top: 20px
+    margin-bottom: 5px;
+    border-radius: 12px;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 24px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    weight: 70%;
+}
+
+.link-logout{
+    color: red;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    text-align: right;
+    width: 100%;
+    text-decoration: none;
+    margin-top: 20px;
+}
+    

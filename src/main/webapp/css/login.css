@@ -1,0 +1,202 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+
+body {
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+    /*display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;*/
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px;
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+main{
+    align-items: center;
+}
+
+.container {
+    background-color: #FFFFFF;
+    padding: 40px;
+    border-radius: 20px;
+    /*box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);*/
+    text-align: center;
+    width: 30%;
+    height: 100%;
+    margin: auto;
+    margin-top: 40px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+h2{
+    padding-top: 0px;
+    color: #0E0E0E;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.title {
+    color: #0E0E0E;
+    font-size: 50px; /* Aumentei o tamanho da fonte */
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+h3{
+    padding-top: 0px;
+    color: #0E0E0E;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 25px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+    margin-bottom: 35px;
+}
+
+
+
+.texto-login{
+    color: #000;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 25px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: 36px;
+}
+
+.input-container {
+    margin-bottom: 30px;
+    text-align: left;
+    
+}
+
+.input-container label {
+    display: block;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 5px;
+    padding-left: 10px;
+}
+
+.input-container input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 2px solid #4856ED;
+    border-radius: 20px;
+    border-width: 2px;
+    background-color: #fffcfc;
+    font-size: 18px; 
+    font-family: "Montserrat Alternates", sans-serif;
+    color: #333;
+    text-align: left;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.input-container input:disabled {
+    color: #666;
+}
+
+.buttons-container {
+    text-align: center;
+}
+
+.buttons-container button {
+    background-color: #4856ED;
+    color: white;
+    padding: 12px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: "Montserrat Alternates";
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-top: 15px;
+}
+
+.buttons-container button:hover {
+    background-color: #3742D6;
+}
+
+
+.links-container {
+    margin-top: 15px;
+}
+
+.links-container a {
+    color: #000;
+    text-decoration: none;
+    font-size: 18px;
+    font-family: "Montserrat Alternates";
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+button{
+    width: 300px;
+    height: 50px;
+    border-radius: 20px;
+    border: #3742D6;
+}
+
+.links-container a:hover {
+    text-decoration: underline;
+}
+
+.mensagem-erro {
+    color: red;
+    margin-top: 10px;
+    text-align: center;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}

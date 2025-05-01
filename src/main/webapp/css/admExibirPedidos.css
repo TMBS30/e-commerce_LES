@@ -1,0 +1,431 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px;
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+h2{
+    padding-top: 0px;
+    color: #0E0E0E;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+h3{
+    color: #000;
+    font-family: "Montserrat Alternates";
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+
+.title {
+    color: #4856ED;
+    font-size: 32px; /* Aumentei o tamanho da fonte */
+    margin-bottom: 30px;
+    font-weight: bold;
+}
+
+.store-name {
+    color: #3742D6;
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.menu {
+    margin-top: 30px;
+}
+
+.menu a {
+    display: block;
+    color: #4856ED;
+    font-size: 18px;
+    text-decoration: none;
+    margin: 10px 0;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.menu a:hover {
+    color: #3742D6;
+}
+
+.links-container {
+    margin-top: 40px;
+}
+
+.links-container a {
+    color: #4856ED;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.links-container a:hover {
+    text-decoration: underline;
+}
+
+/*MENU*/
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+
+}
+
+.chatbot{
+    display: flex;
+    gap: 1px;
+    flex-direction: row;
+    text-decoration: none;
+}
+
+.texto-chatbot{
+    text-decoration: none;
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color:  #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px;
+}
+
+.link-categorias{
+    text-decoration: none;
+}
+
+.categorias{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.link-pedidos{
+    text-decoration: none;
+}
+
+.pedidos{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+
+.icone-user{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.container {
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-top: 50px;
+}
+
+.meus-pedidos {
+    font-family: "Montserrat Alternates";
+    font-size: 35px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: normal;
+}
+
+.pedido-container {
+    padding: 10px 25px;
+    border: 1px solid #4856ED;
+    border-radius: 20px;
+    margin: 20px 0px;
+}
+
+.itens-pedido {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.item-pedido {
+    display: flex;
+    align-items: center;
+    padding-bottom: 10px;
+    margin-bottom: -10px;
+}
+
+.imagem-container {
+    width: 80px;
+    height: 100px;
+    margin-right: 15px;
+    overflow: hidden;
+}
+
+.imagem-container img {
+    width: 85%;
+    height: auto;
+    object-fit: cover;
+}
+
+.info-container {
+    flex-grow: 1;
+    margin-right: 15px;
+}
+
+.info-container .titulo {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.info-container .editora {
+    font-size: 0.9em;
+    margin-top: 08px;
+    color: #555;
+    margin-bottom: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.info-container .valor-unitario {
+    margin-top: 15px;
+    font-size: 1.0em;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    color: green;
+}
+
+.detalhes-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-left: auto;
+    margin-right: 150px;
+}
+
+.detalhes-container .quantidade {
+    margin-bottom: 10px;
+    margin-top: 30px;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.detalhes-container .valor-total {
+    font-weight: bold;
+    color: blue;
+    font-size: 1.2em;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.acompanhamento-container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+}
+
+.status-container {
+    display: flex;
+    flex-direction: column;
+    margin-right: 80px;
+}
+
+.status-container label {
+    font-size: 18px;
+    margin-bottom: 5px;
+    text-align: center;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+.status-container select {
+    padding: 8px 12px;
+    border: 1px solid #4856ED;
+    border-radius: 15px;
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 560;
+    line-height: normal;
+    width: 300px; /* Ajuste a largura conforme necessário */
+}
+
+.acompanhamento-container .btn-retornar-estoque {
+    padding: 8px 12px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    background-color: #4856ED; /* Cor laranja para diferenciar */
+    font-family: "Montserrat Alternates";
+    font-weight: 600;
+    line-height: normal;
+    width: 180px; /* Ajuste a largura conforme necessário */
+    margin-left: 10px; /* Espaçamento entre o select e o botão */
+}
+
+.acompanhamento-container .btn-retornar-estoque:hover {
+    background-color: #2936ca;
+}
+
+.numero-pedido {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.datas-controle {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    color: #777;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.datas-controle p {
+    margin-bottom: 3px;
+}
+
+
+.data-criacao {
+    margin-right: 30px;
+}
+
+.acao-container {
+    margin-top: 20px;
+    display: flex;
+    justify-content: flex-end; /* Alinha o botão "Salvar Status" à direita */
+}
+
+.acao-container form {
+    display: inline-block; /* Para o botão ficar ao lado de outros elementos, se houver */
+}
+
+.acao-container .btn-salvar-status {
+    padding: 10px 15px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    background-color: #2BAA15;
+    font-family: "Montserrat Alternates";
+    font-weight: 600;
+    line-height: normal;
+    width: 180px; /* Ajuste a largura conforme necessário */
+    margin-top: -90px;
+}
+
+.acao-container .btn-autorizar-troca:hover {
+    background-color: #084177;
+}
+
+.acao-container .btn-autorizar-troca {
+    padding: 10px 15px;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 20px;
+    background-color: #1672af;
+    font-family: "Montserrat Alternates";
+    font-weight: 600;
+    line-height: normal;
+    width: 220px; /* Ajuste a largura conforme necessário */
+    margin-left: 15px;
+    margin-top: -150px;
+    margin-right: 125px;
+}
+
+.acao-container .btn-salvar-status:hover {
+    background-color: #1f830d;
+}
+
+.mensagem-nenhum-pedido {
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    color: #777;
+    margin-top: 20px;
+}
