@@ -132,6 +132,14 @@ h3{
     
 }
 
+.texto-adm{
+    color: #b31414;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal; 
+}
+
 .chatbot{
     display: flex;
     gap: 1px;

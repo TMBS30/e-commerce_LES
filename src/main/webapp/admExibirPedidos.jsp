@@ -73,11 +73,11 @@
                                 <div class="info-container">
                                     <p class="titulo"><%= livro.getTitulo() %></p>
                                     <p class="editora">Editora: <%= livro.getEditora().getNome() %></p>
-                                    <p class="valor-unitario">Und: R$ <%= String.format("%.2f", itemCompra.getValorUnitarioNaCompra()) %></p>
+                                    <p class="valor-unitario">Und:<br>R$<%= String.format("%.2f", itemCompra.getValorUnitarioNaCompra()) %></p>
                                 </div>
                                 <div class="detalhes-container">
                                     <p class="quantidade">Qtde: <%= itemCompra.getQuantidade() %></p>
-                                    <p class="valor-total">Total: R$ <%= String.format("%.2f", itemCompra.getQuantidade() * itemCompra.getValorUnitarioNaCompra()) %></p>
+                                    <p class="valor-total">Total:<br>R$<%= String.format("%.2f", itemCompra.getQuantidade() * itemCompra.getValorUnitarioNaCompra()) %></p>
                                 </div>
                                 <div class="acompanhamento-container">
                                     <div class="status-container">

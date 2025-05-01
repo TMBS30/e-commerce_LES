@@ -34,7 +34,7 @@
                 <p class="categorias">Categorias</p>
             </a>
 
-            <a href="#" class="link-pedidos">
+            <a href="servlet?action=exibirPedidos" class="link-pedidos">
                 <p class="pedidos">Pedidos</p>
             </a>
 
@@ -67,7 +67,7 @@
                         }
                         if (cuponsPromocionais.isEmpty()) {
                     %>
-                        <p class="no-cupons" style="padding-left: 20px;">Nenhum cupom promocional disponível!</p>
+                        <p class="no-cupons" style="padding-left: 20px;">Nenhum cupom promocional disponivel!</p>
                     <%
                         } else {
                             Cupom cupomPromocionalSelecionado = (Cupom) session.getAttribute("cupomSelecionado");
@@ -105,7 +105,7 @@
                         }
                         if (cuponsTrocaList.isEmpty() && clienteId != null) {
                     %>
-                        <p class="no-cupons" style="padding-left: 20px;">Nenhum cupom de troca disponível!</p>
+                        <p class="no-cupons" style="padding-left: 20px;">Nenhum cupom de troca disponivel!</p>
                     <%
                         } else {
                             // Para manter a seleção do cupom de troca, você precisará armazenar o ID do cupom selecionado na sessão
