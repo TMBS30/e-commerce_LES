@@ -29,7 +29,7 @@ header .logo-link {
 
 h1{
     border: 1px solid #4856ED;
-    margin-bottom: 47px; 
+    margin-bottom: 47px;
     color: #FFF;
     font-size: 48px;
     font-style: normal;
@@ -131,6 +131,7 @@ h3{
     margin-right: 110px;
 
 }
+
 
 .texto-adm{
     color: #b31414;
@@ -256,7 +257,7 @@ h3{
 }
 
 .livro-item{
-    text-decoration: none; 
+    text-decoration: none;
     width: 140px;
     height: 285px;
 }
@@ -333,4 +334,4 @@ h3{
     text-decoration: none;
     margin-top: 20px;
 }
-    
+

@@ -46,6 +46,10 @@ public class CtrlServlet extends HttpServlet {
             case "voltarHomePage":
                 voltarHomePage(request, response);
                 break;
+
+            case "voltarHomePageADM":
+                voltarHomePageADM(request, response);
+                break;
             case "consultarInfoPessoais":
                 consultarInfoPessoais(request, response);
                 break;

@@ -46,67 +46,70 @@
                 <img class="icone-user" src="Imagens/Icone - User.svg" alt="Icone Consultar Informacoes Cadastrais">
             </a>
         </div>
-
-        <h2 class="carrrinho">Meu Carrinho</h2>
         <div class="container">
-            <div class="lista-de-itens-carrinho">
-                <%
-                Integer clienteId = (Integer) session.getAttribute("clienteId");
+            <div class="itens-carrinho">
+                <h2 class="carrrinho">Meu Carrinho</h2>
+                <div class="lista-de-itens-carrinho">
+                    <%
+                    Integer clienteId = (Integer) session.getAttribute("clienteId");
 
-                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
-                Carrinho carrinho = carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
-                List<CarrinhoItem> itensCarrinho = (carrinho != null) ? carrinho.getItens() : new ArrayList<>();
+                    CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                    Carrinho carrinho = carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
+                    List<CarrinhoItem> itensCarrinho = (carrinho != null) ? carrinho.getItens() : new ArrayList<>();
 
-                double subtotal = 0;
-                double frete = 0.0;
+                    double subtotal = 0;
+                    double frete = 0.0;
 
-                if (itensCarrinho.isEmpty()) {
-                %>
-                    <p>Seu carrinho esta vazio!</p>
-                <%
-                } else {
-                    frete = 20.0;
-                    for (CarrinhoItem item : itensCarrinho) {
-                        Livro livro = item.getItem().getLivro();
-                        double precoUnitario = item.getItem().getValorVenda();
-                        double precoTotalItem = precoUnitario * item.getQuantidade();
-                        subtotal += precoTotalItem;
-                %>
+                    if (itensCarrinho.isEmpty()) {
+                    %>
+                        <p>Seu carrinho esta vazio!</p>
+                    <%
+                    } else {
+                        frete = 20.0;
+                        for (CarrinhoItem item : itensCarrinho) {
+                            Livro livro = item.getItem().getLivro();
+                            double precoUnitario = item.getItem().getValorVenda();
+                            double precoTotalItem = precoUnitario * item.getQuantidade();
+                            subtotal += precoTotalItem;
+                    %>
 
-                        <div class="item-carrinho">
-                            <div class="info-livro">
-                                <div class="imagem-livro">
-                                    <img src="<%= livro.getCaminhoImagem() %>" alt="<%= livro.getTitulo() %>">
-                                </div>
-                                <div>
-                                    <p style="color: red;">ID do item: <%= item.getId() %></p>
-                                    <div class="titulo-com-botao">
-                                        <h3 class="titulo"><%= livro.getTitulo() %></h3>
-                                        <form action="servlet" method="post" onsubmit="return confirmarExclusao('<%= item.getId() %>');">
-                                            <input type="hidden" name="action" value="removerItemCarrinho">
-                                            <input type="hidden" name="id" value="<%= item.getId() %>">
-                                            <button type="submit" class="excluir-btn">Excluir Item</button>
-                                        </form>
+                            <div class="item-carrinho">
+                                <div class="info-livro">
+                                    <div class="imagem-livro">
+                                        <img src="<%= livro.getCaminhoImagem() %>" alt="<%= livro.getTitulo() %>">
                                     </div>
-                                    <p class="editora">Editora: <%= livro.getEditora().getNome() %></p>
-                                    <div class="quantidade-container">
-                                        <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, -1, '<%= item.getId() %>')">-</button>
-                                        <input type="text" class="visor-quantidade" value="<%= item.getQuantidade() %>" min="1" readonly>
-                                        <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, 1, '<%= item.getId() %>')">+</button>
+                                    <div>
+                                        <p style="color: red;">ID do item: <%= item.getId() %></p>
+                                        <div class="titulo-com-botao">
+                                            <h3 class="titulo"><%= livro.getTitulo() %></h3>
+                                            <form action="servlet" method="post" onsubmit="return confirmarExclusao('<%= item.getId() %>');">
+                                                <input type="hidden" name="action" value="removerItemCarrinho">
+                                                <input type="hidden" name="id" value="<%= item.getId() %>">
+                                                <button type="submit" class="excluir-btn">Excluir Item</button>
+                                            </form>
+                                        </div>
+                                        <p class="editora">Editora: <%= livro.getEditora().getNome() %></p>
+                                        <div class="quantidade-container">
+                                            <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, -1, '<%= item.getId() %>')">-</button>
+                                            <input type="text" class="visor-quantidade" value="<%= item.getQuantidade() %>" min="1" readonly>
+                                            <button type="button" class="botao-quantidade" onclick="alterarQuantidade(this, 1, '<%= item.getId() %>')">+</button>
+                                        </div>
+                                        <p class="preco-total">Total: R$ <%= String.format("%.2f", precoTotalItem) %></p>
                                     </div>
-                                    <p class="preco-total">Total: R$ <%= String.format("%.2f", precoTotalItem) %></p>
                                 </div>
                             </div>
-                        </div>
-                <%
+                    <%
+                        }
                     }
-                }
-                %>
+                    %>
+                </div>
+            </div>
+
             <div class="resumo-compra">
-                <h2 class="resumo-compra">Resumo da Compra</h2>
+                <h2 class="txt-resumo-compra">Resumo da Compra</h2>
                 <p>Subtotal: R$ <%= String.format("%.2f", subtotal) %></p>
                 <div class="frete-container">
-                    <h2>Escolha o Frete</h2>
+                    <h2 class="txt-frete">Escolha o Frete</h2>
                     <select name="tipoFrete" onchange="atualizarTotalComFrete(this.value)">
                         <option value="<%= TipoFrete.EXPRESS.getDescricao() %>"><%= TipoFrete.EXPRESS %></option>
                         <option value="<%= TipoFrete.PADRAO.getDescricao() %>"><%= TipoFrete.PADRAO %></option>

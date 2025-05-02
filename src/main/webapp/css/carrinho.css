@@ -151,8 +151,7 @@ h2 {
     font-style: normal;
     font-weight: 700;
     line-height: normal;
-    margin-bottom: -30px;
-    padding-left: 10%;
+    margin-bottom: 0px;
 }
 
 .container {
@@ -182,9 +181,13 @@ h2 {
 
 }
 
+.itens-carrinho{
+    width: 65%;
+}
+
 .item-carrinho:last-child {
     border-bottom: none; /* Remove a linha divisória do último item */
-    margin-bottom: 2px;
+    margin-bottom: 10px;
 }
 
 .imagem-livro {
@@ -257,7 +260,7 @@ h2 {
 }
 
 .resumo-compra {
-    width: 300px; /* Defina uma largura para o resumo */
+    width: 30%; /* Defina uma largura para o resumo */
     flex-shrink: 0; /* Impede que o resumo encolha */
     padding: 20px;
     border: 1px solid #ccc;
@@ -267,16 +270,31 @@ h2 {
     align-self: flex-start; /* Garante que alinha ao topo do container */
 }
 
-.resumo-compra h2 {
+.txt-resumo-compra{
     text-align: left;
     margin-top: 0;
     margin-bottom: 15px;
-    font-size: 24px;
+    font-size: 30px;
+    margin-top: 0px;
+}
+
+.txt-frete{
+    font-size: 16px;
+    margin: 5px 0px;
 }
 
 .frete-container,
 .cupom-container {
     margin-bottom: 10px;
+}
+
+p{
+    margin: 0px 0px;
+}
+
+select{
+    font-size: 16px;
+    padding: 2px;
 }
 
 .finalizar-compra-btn {
