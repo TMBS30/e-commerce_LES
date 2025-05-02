@@ -1,0 +1,242 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+}
+
+header{
+    background-color: #4856ED;
+    height: 150px;
+    display: flex;
+    align-items: center; 
+
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; 
+    text-decoration: none; 
+    color: inherit; 
+}
+
+main{
+    padding: 40px 100px 0px 100px ;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+
+h1{
+    border: 1px solid #4856ED;
+    margin-bottom: 47px; 
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+h2 {
+    text-align: left;
+    color: #000;
+    margin-top: 20px;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-bottom: -30px;
+}
+
+h3{
+    font-family: "Montserrat Alternates";
+    font-size: 30px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    /*margin-bottom: -30px;*/
+}
+
+.container {
+    width: 80%;
+    margin: 20px auto;
+    margin-bottom: -30px;
+}
+
+.cartao-container {
+    background-color: #fff;
+    padding: 20px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+    /*width: 1200px;*/
+
+}
+
+.cartao-container h3 {
+    text-align: center;
+    color: #4856ED;
+    margin-bottom: 15px;
+}
+
+.input-container {
+    margin: 10px 0;
+}
+
+.input-container label,
+.input-container-cvv label,
+ .input-container-dtVencimento label
+{
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 5px;
+    padding-left: 10px;
+}
+
+.input-container input,
+ .input-container-cvv input,
+ .input-container-dtVencimento input
+ {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    background-color: #f9f9f9;
+    color: #333;
+    border-width: 2px;
+    border-color: #7c7d86;
+    font-size: 18px;          /* Tamanho da fonte */
+    font-family: "Montserrat Alternates", sans-serif; /* Fonte */
+    /*color: #000;   */           /* Cor do texto */
+    text-align: left;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.input-container input[disabled] {
+    background-color: #e9e9e9;
+    color: #777777;
+}
+
+.input-container-cvv,
+.input-container-dtVencimento{
+    width: 100%; 
+    max-width: 120px; 
+}
+
+.input-numero-nomeTitular{
+    display: flex;
+    gap: 20px;
+    /*align-items: flex-start; */
+    flex-direction: row;
+}
+
+.input-cod-data-bandeira{
+    display: flex;
+    gap: 20px;
+    /*align-items: flex-start; */
+    flex-direction: row;
+}
+
+
+button{
+    background-color: #4856ED;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    width: 116px;
+    height: 50px;
+    flex-shrink: 0;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    font-size: 18px;
+    font-family: "Montserrat Alternates", sans-serif; /* Fonte */
+}
+
+/* Botão Excluir */
+.excluir-btn {
+    background-color: #d32f2f !important;
+    color: white;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 150px; /* Define a largura fixa do botão */
+}
+
+.excluir-btn:hover {
+    background-color: #c2185b !important;
+}
+
+.buttons-container {
+    text-align: center;
+}
+
+
+.voltar-button {
+    background-color: #808080;
+    margin-bottom: 15px
+}
+
+.voltar-button:hover {
+    background-color: #696969;
+}
+
+.editar-btn:hover {
+    background-color: #1f2bad;
+}
+
+.editar-btn {
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    width: 150px; /* Define a largura fixa do botão */
+    margin-right: 20px;
+}
+
+/* Estilo para os botões */
+.buttons-container {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.top-buttons {
+    display: flex;
+    justify-content: flex-end; /* Coloca o botão à direita */
+    margin-bottom: 20px;
+}
+
+.add-button {
+    background-color: #4856ED; /* Cor principal */
+    color: white;
+    padding: 10px 15px;
+    cursor: pointer;
+    margin-bottom: 0px;
+    width: 210px;
+    height: 50px;
+    margin-bottom: -60px;
+
+}
+
+.add-button:hover {
+    background-color: #3b4bc6; /* Tom mais escuro da cor principal */
+}
+
