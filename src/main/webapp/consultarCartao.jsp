@@ -12,11 +12,11 @@
 <body>
 
     <header>
-        <a href="home.jsp" class="logo-link">
+        <a href="servlet?action=voltarHomePage" class="logo-link">
             <h1>PageStation</h1>
             <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
         </a>
-    </header>    
+    </header>
     <main>
 
     <h2>Cartoes do Cliente</h2> <!-- Título da tela -->
@@ -31,10 +31,12 @@
 
         <%
             Integer clienteId = (Integer) session.getAttribute("clienteId");
+            System.out.println("ID do Cliente na sessão antes da consulta: " + clienteId);
             List<Cartao> cartoes = null;
             if (clienteId != null) {
                 CartaoDAO cartaoDAO = new CartaoDAO();
                 cartoes = cartaoDAO.consultarCartoesPorCliente(clienteId);
+                System.out.println("Número de cartões na lista após consulta: " + (cartoes != null ? cartoes.size() : 0));
             }
 
             if (cartoes == null || cartoes.isEmpty()) {

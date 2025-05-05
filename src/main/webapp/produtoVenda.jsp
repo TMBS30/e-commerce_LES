@@ -62,7 +62,7 @@
                 <p class="categorias">Categorias</p>
             </a>
 
-            <a href="#" class="link-pedidos">
+            <a href="servlet?action=exibirPedidos" class="link-pedidos">
                 <p class="pedidos">Pedidos</p>
             </a>
 

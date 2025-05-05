@@ -39,7 +39,7 @@ public class CarrinhoItemDAO implements IDAO{
     public List<CarrinhoItem> consultarPorCarrinho(int idCarrinho, Connection conn) throws SQLException {
         String sql = "SELECT ci.id, ci.id_livro, ci.quantidade, i.valorVenda, i.id_item " +
                 "FROM carrinho_item ci " +
-                "JOIN item i ON ci.id_livro = i.livroId " +
+                "JOIN item i ON ci.id_livro = i.id_livro " +
                 "WHERE ci.id_carrinho = ?";
 
         PreparedStatement stmt = null;
@@ -93,6 +93,45 @@ public class CarrinhoItemDAO implements IDAO{
         return null;
     }
 
+
+    public CarrinhoItem buscarPorId(int idCarrinhoItem, Connection conn) throws SQLException {
+        CarrinhoItem carrinhoItem = null;
+        String sql = "SELECT * FROM carrinho_item WHERE id = ?"; // Busca pelo ID primário
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, idCarrinhoItem);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                carrinhoItem = new CarrinhoItem();
+                carrinhoItem.setId(rs.getInt("id"));
+                carrinhoItem.setIdCarrinho(rs.getInt("id_carrinho"));
+                carrinhoItem.setIdLivro(rs.getInt("id_livro"));
+                carrinhoItem.setQuantidade(rs.getInt("quantidade"));
+                // Mapeie outros atributos se houver
+            }
+        }
+        return carrinhoItem;
+    }
+
+    public void atualizarQuantidade(int idCarrinhoItem, int novaQuantidade, Connection conn) throws SQLException {
+        String sql = "UPDATE carrinho_item SET quantidade = ? WHERE id = ?";
+        PreparedStatement stmt = null;
+
+        try {
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, novaQuantidade);
+            stmt.setInt(2, idCarrinhoItem);
+            stmt.executeUpdate();
+            System.out.println("DEBUG DAO: Quantidade do item " + idCarrinhoItem + " atualizada para " + novaQuantidade);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new RuntimeException("Erro ao atualizar quantidade do item no carrinho", e);
+        } finally {
+            if (stmt != null) stmt.close();
+        }
+    }
+
     @Override
     public String excluir(EntidadeDominio entidade) {
         System.out.println(">> CarrinhoItemDAO.excluir() chamado com: " + entidade.getClass().getName());
@@ -130,6 +169,7 @@ public class CarrinhoItemDAO implements IDAO{
             }
         }
     }
+
 
     @Override
     public EntidadeDominio selecionar(EntidadeDominio entidade) {

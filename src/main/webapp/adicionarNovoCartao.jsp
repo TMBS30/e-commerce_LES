@@ -14,11 +14,11 @@
 <body>
 
 <header>
-    <a href="home.jsp" class="logo-link">
-        <h1>PageStation</h1>
-        <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
-    </a>
-</header>    
+     <a href="servlet?action=voltarHomePage" class="logo-link">
+         <h1>PageStation</h1>
+         <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
+     </a>
+</header>
 <main>
     <%
         BandeiraCartaoDAO bandeiraCartaoDAO = new BandeiraCartaoDAO();

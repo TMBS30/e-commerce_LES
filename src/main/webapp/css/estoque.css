@@ -44,7 +44,7 @@ h2{
     padding-top: 0px;
     color: #0E0E0E;
     font-family: "Montserrat Alternates";
-    font-size: 48px;
+    font-size: 35px;
     font-style: normal;
     font-weight: 600;
     line-height: normal;
@@ -123,7 +123,7 @@ h3{
     font-size: 20px;
     font-style: normal;
     font-weight: 600;
-    line-height: normal; 
+    line-height: normal;
 }
 
 .chatbot{
@@ -205,115 +205,20 @@ h3{
     margin-top: 50px;
 }
 
-.meus-pedidos {
-    font-family: "Montserrat Alternates";
-    font-size: 35px;
-    font-style: normal;
-    font-weight: 700;
-    line-height: normal;
-}
-
-.pedido-container {
+.livro-container{
     padding: 10px 25px;
     border: 1px solid #4856ED;
     border-radius: 20px;
     margin: 20px 0px;
 }
 
-.itens-pedido {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 10px;
-}
-
-.item-pedido {
-    display: flex;
-    align-items: center;
-    padding-bottom: 10px;
-    margin-bottom: -10px;
-}
-
-.imagem-container {
-    width: 80px;
-    height: 100px;
-    margin-right: 15px;
-    overflow: hidden;
-}
-
-.imagem-container img {
-    width: 85%;
-    height: auto;
-    object-fit: cover;
-}
-
-.info-container {
-    flex-grow: 1;
-    margin-right: 15px;
-}
-
-.info-container .titulo {
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-
-.info-container .editora {
-    font-size: 0.9em;
-    margin-top: 08px;
-    color: #555;
-    margin-bottom: 20px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-}
-
-.info-container .valor-unitario {
-    margin-top: 15px;
-    font-size: 1.1em;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-    color: green;
-}
-
-.detalhes-container {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-left: auto;
-    margin-right: 150px;
-}
-
-.detalhes-container .quantidade {
-    margin-bottom: 10px;
-    margin-top: 30px;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: 500;
-    line-height: normal;
-}
-
-.detalhes-container .valor-total {
-    font-weight: bold;
-    color: blue;
-    font-size: 1.1em;
-    margin-top: 20px;
-    margin-bottom: 5px;
-}
-
-.acompanhamento-container {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-}
-
-.status-container {
+.controle-estoque {
     display: flex;
     flex-direction: column;
     margin-right: 80px;
 }
 
-.status-container label {
+.controle-estoque label {
     font-size: 18px;
     margin-bottom: 5px;
     text-align: center;
@@ -322,7 +227,7 @@ h3{
     line-height: normal;
 }
 
-.status-container select {
+.controle-estoque select {
     padding: 8px 12px;
     border: 1px solid #4856ED;
     border-radius: 15px;
@@ -332,108 +237,18 @@ h3{
     font-style: normal;
     font-weight: 560;
     line-height: normal;
-    width: 300px; /* Ajuste a largura conforme necessário */
+    width: 350px; /* Ajuste a largura conforme necessário */
 }
 
-.acompanhamento-container .btn-retornar-estoque {
+.controle-estoque input{
     padding: 8px 12px;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 20px;
-    background-color: #4856ED; /* Cor laranja para diferenciar */
-    font-family: "Montserrat Alternates";
-    font-weight: 600;
-    line-height: normal;
-    width: 180px; /* Ajuste a largura conforme necessário */
-    margin-left: 10px; /* Espaçamento entre o select e o botão */
-}
-
-.acompanhamento-container .btn-retornar-estoque:hover {
-    background-color: #2936ca;
-}
-
-.numero-pedido {
-    font-size: 1.2em;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-.datas-controle {
-    display: flex;
-    flex-direction: row;
-    align-items: flex-end;
-    color: #777;
-    font-family: "Montserrat Alternates";
+    border: 1px solid #4856ED;
+    border-radius: 15px;
+    margin-bottom: 5px;
+    text-align: center;
     font-size: 18px;
     font-style: normal;
-    font-weight: 600;
+    font-weight: 560;
     line-height: normal;
-}
-
-.datas-controle p {
-    margin-bottom: 3px;
-}
-
-
-.data-criacao {
-    margin-right: 30px;
-}
-
-.acao-container {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end; /* Alinha o botão "Salvar Status" à direita */
-}
-
-.acao-container form {
-    display: inline-block; /* Para o botão ficar ao lado de outros elementos, se houver */
-}
-
-.acao-container .btn-salvar-status {
-    padding: 10px 15px;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 20px;
-    background-color: #2BAA15;
-    font-family: "Montserrat Alternates";
-    font-weight: 600;
-    line-height: normal;
-    width: 180px; /* Ajuste a largura conforme necessário */
-    margin-top: -90px;
-}
-
-.acao-container .btn-autorizar-troca:hover {
-    background-color: #084177;
-}
-
-.acao-container .btn-autorizar-troca {
-    padding: 10px 15px;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 20px;
-    background-color: #1672af;
-    font-family: "Montserrat Alternates";
-    font-weight: 600;
-    line-height: normal;
-    width: 220px; /* Ajuste a largura conforme necessário */
-    margin-left: 15px;
-    margin-top: -150px;
-    margin-right: 125px;
-}
-
-.acao-container .btn-salvar-status:hover {
-    background-color: #1f830d;
-}
-
-.mensagem-nenhum-pedido {
-    font-family: "Montserrat Alternates";
-    font-size: 20px;
-    color: #777;
-    margin-top: 20px;
+    width: 180px;
 }

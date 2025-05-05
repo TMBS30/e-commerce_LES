@@ -35,7 +35,6 @@ public class CtrlServlet extends HttpServlet {
         if (action == null || action.isEmpty()) {
             action = "home";
         }
-
         switch (action) {
             case "consultar":
                 consultarCliente(request, response);
@@ -46,7 +45,6 @@ public class CtrlServlet extends HttpServlet {
             case "voltarHomePage":
                 voltarHomePage(request, response);
                 break;
-
             case "voltarHomePageADM":
                 voltarHomePageADM(request, response);
                 break;
@@ -98,8 +96,15 @@ public class CtrlServlet extends HttpServlet {
             case "logout":
                 logoutAction(request, response);
                 break;
-
-
+            case "esvaziarCarrinhoInativo":
+                esvaziarCarrinhoInativo(request, response);
+                break;
+            case "pingAtividadeCarrinho":
+                pingAtividadeCarrinho(request, response);
+                break;
+            case "exibirEstoque":
+                exibirEstoque(request, response);
+                break;
             case "addcliente":
                 System.out.println("Redirecionando para addClienteForm.jsp");
                 request.getRequestDispatcher("addClienteForm.jsp").forward(request, response);
@@ -195,6 +200,9 @@ public class CtrlServlet extends HttpServlet {
             case "removerItemCarrinho":
                 removerItemCarrinho(request, response);
                 break;
+            case "pingAtividadeCarrinho":
+                pingAtividadeCarrinho(request, response);
+                break;
             case "aplicarCupom":
                 aplicarCupom(request, response);
                 break;
@@ -219,7 +227,6 @@ public class CtrlServlet extends HttpServlet {
             case "autorizarTroca":
                 autorizarTroca(request, response);
                 break;
-
             default:
                 request.setAttribute("mensagemErro", "Ação não reconhecida.");
                 request.getRequestDispatcher("index.jsp").forward(request, response);
@@ -449,6 +456,45 @@ public class CtrlServlet extends HttpServlet {
 
     private void consultarEnderecoPessoal(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         request.getRequestDispatcher("consultarEndereco.jsp").forward(request, response);
+    }
+
+    private void exibirEstoque(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
+        try {
+            conn = Conexao.createConnectionToMySQL();
+            FornecedorDAO fornecedorDAO = new FornecedorDAO();
+            List<Fornecedor> listaDeFornecedores = fornecedorDAO.consultarTodos(conn);
+            request.setAttribute("listaDeFornecedores", listaDeFornecedores);
+
+            LivroDAO livroDAO = new LivroDAO();
+            List<Livro> listaDeLivros = livroDAO.consultarTodos();
+            request.setAttribute("listaDeLivros", listaDeLivros);
+
+            ItemDAO itemDAO = new ItemDAO();
+            Map<Integer, Item> estoquePorLivro = new HashMap<>();
+            for (Livro livro : listaDeLivros) {
+                Item itemEstoque = itemDAO.consultarItemMaisRecentePorLivro(livro.getId());
+                estoquePorLivro.put(livro.getId(), itemEstoque);
+            }
+            request.setAttribute("estoquePorLivro", estoquePorLivro);
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher("estoque.jsp");
+            dispatcher.forward(request, response);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            throw new ServletException("Erro ao acessar o banco de dados para exibir o estoque.", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     private void consultarCartaoPessoal(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -1065,8 +1111,8 @@ public class CtrlServlet extends HttpServlet {
             }
 
             int idLivro = Integer.parseInt(idLivroParam);
-            int quantidade = Integer.parseInt(quantidadeParam);
-            System.out.println("DEBUG: idItem = " + idLivro + ", quantidade = " + quantidade);
+            int quantidadeDesejada = Integer.parseInt(quantidadeParam);
+            System.out.println("DEBUG: idLivro = " + idLivro + ", quantidadeDesejada = " + quantidadeDesejada);
 
             Connection conn = null;
             try {
@@ -1075,19 +1121,41 @@ public class CtrlServlet extends HttpServlet {
 
                 CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
                 Carrinho carrinho = carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn);
+                System.out.println("DEBUG: Resultado da busca do carrinho para cliente " + clienteId + ": " + carrinho);
                 int idCarrinho = carrinho.getId();
                 System.out.println("DEBUG: idCarrinho = " + idCarrinho);
 
-                CarrinhoItem carrinhoItem = new CarrinhoItem();
-                carrinhoItem.setIdCarrinho(idCarrinho);
-                carrinhoItem.setIdLivro(idLivro);
-                carrinhoItem.setQuantidade(quantidade);
-
                 CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
-                String msg = carrinhoItemDAO.salvar(carrinhoItem, conn);
-                System.out.println("DEBUG: Resultado do salvar = " + msg);
+                List<CarrinhoItem> itensCarrinho = carrinhoItemDAO.consultarPorCarrinho(idCarrinho, conn);
+                CarrinhoItem itemExistente = null;
+                for (CarrinhoItem item : itensCarrinho) {
+                    if (item.getIdLivro() == idLivro) {
+                        itemExistente = item;
+                        break;
+                    }
+                }
 
-                request.setAttribute("mensagem", msg);
+                if (itemExistente != null) {
+                    // Item já existe, atualizar a quantidade
+                    int novaQuantidade = itemExistente.getQuantidade() + quantidadeDesejada;
+                    carrinhoItemDAO.atualizarQuantidade(itemExistente.getId(), novaQuantidade, conn); // Use o ID do carrinho_item para atualizar
+                    request.setAttribute("mensagem", "Quantidade do item atualizada no carrinho.");
+                    System.out.println("DEBUG: Quantidade do item " + idLivro + " atualizada para " + novaQuantidade);
+                } else {
+                    // Item não existe, adicionar novo
+                    CarrinhoItem novoItem = new CarrinhoItem();
+                    novoItem.setIdCarrinho(idCarrinho);
+                    novoItem.setIdLivro(idLivro);
+                    novoItem.setQuantidade(quantidadeDesejada);
+
+                    String msgCarrinho = carrinhoItemDAO.salvar(novoItem, conn);
+                    System.out.println("DEBUG: Resultado do salvar no carrinho = " + msgCarrinho);
+                    request.setAttribute("mensagem", "Item adicionado ao carrinho com sucesso.");
+                }
+
+                // Atualizar a 'ultima_atividade' do carrinho
+                carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
+
             } catch (SQLException e) {
                 System.out.println("DEBUG: SQLException - " + e.getMessage());
                 throw new ServletException("Erro ao adicionar item ao carrinho", e);
@@ -1096,7 +1164,7 @@ public class CtrlServlet extends HttpServlet {
             }
 
             request.getRequestDispatcher("carrinho.jsp").forward(request, response);
-            System.out.println("DEBUG: Forward realizado para produtoVenda.jsp");
+            System.out.println("DEBUG: Forward realizado para carrinho.jsp");
 
         } catch (Exception e) {
             System.out.println("DEBUG: Exceção capturada - " + e.getMessage());
@@ -1162,29 +1230,123 @@ public class CtrlServlet extends HttpServlet {
     }
 
     private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
         try {
-            int itemId = Integer.parseInt(request.getParameter("id")); // agora usa o ID do item
-            System.out.println("ID do item a excluir: " + itemId);
+            conn = Conexao.createConnectionToMySQL();
+            int idCarrinhoItem = Integer.parseInt(request.getParameter("id")); // Recebe o ID do carrinho_item
+            System.out.println("DEBUG REMOVER: Tentando excluir item do carrinho com ID " + idCarrinhoItem);
             int clienteId = (int) request.getSession().getAttribute("clienteId");
 
-            CarrinhoItem item = new CarrinhoItem();
-            item.setId(itemId);
+            CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
+            CarrinhoItem itemRemovido = carrinhoItemDAO.buscarPorId(idCarrinhoItem, conn);
 
-            IFachada fachada = new Fachada();
-            String resultado = fachada.excluir(item);
+            if (itemRemovido != null) {
+                int idLivroRemovido = itemRemovido.getIdLivro();
+                int quantidadeRemovida = itemRemovido.getQuantidade();
+                int idCarrinho = itemRemovido.getIdCarrinho(); // Obtém o ID do carrinho
+                System.out.println("DEBUG REMOVER: CarrinhoItem encontrado. Livro ID: " + idLivroRemovido + ", Quantidade: " + quantidadeRemovida + ", Carrinho ID: " + idCarrinho);
 
-            if (resultado == null) {
-                System.out.println("Item removido com sucesso.");
-                request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso.");
+                // Buscar o Item original para obter o valorVenda
+                ItemDAO itemDAO = new ItemDAO();
+                Item itemOriginal = itemDAO.consultarItemMaisRecentePorLivro(idLivroRemovido);
+                double valorVendaOriginal = 0.0;
+                if (itemOriginal != null) {
+                    valorVendaOriginal = itemOriginal.getValorVenda();
+                    System.out.println("DEBUG REMOVER: Valor de venda original do livro: " + valorVendaOriginal);
+                } else {
+                    System.out.println("DEBUG REMOVER: Aviso: Não foi possível encontrar o item original para obter o valor de venda.");
+                    request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o item original para obter o valor de venda.");
+                }
+
+                // 2. Remover o item do carrinho (usando a fachada)
+                IFachada fachada = new Fachada();
+                CarrinhoItem itemParaExcluir = new CarrinhoItem();
+                itemParaExcluir.setId(idCarrinhoItem); // Usa o ID correto para exclusão
+                String resultado = fachada.excluir(itemParaExcluir);
+
+                if (resultado == null) {
+                    System.out.println("DEBUG REMOVER: Item removido com sucesso do carrinho.");
+                    request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso do carrinho.");
+
+                    // 3. Adicionar a quantidade de volta ao estoque
+                    Item estoqueAtual = itemDAO.consultarItemMaisRecentePorLivro(idLivroRemovido);
+
+                    if (estoqueAtual != null) {
+                        int novaQuantidadeEstoque = estoqueAtual.getQuantidade() + quantidadeRemovida;
+                        Item novoItemEstoque = new Item();
+                        novoItemEstoque.setLivroId(idLivroRemovido);
+                        novoItemEstoque.setQuantidade(novaQuantidadeEstoque);
+                        novoItemEstoque.setValorVenda(valorVendaOriginal); // Usando o valor de venda original
+                        novoItemEstoque.setIdFornecedor(itemOriginal.getIdFornecedor());
+                        novoItemEstoque.setDataEntrada(new java.sql.Timestamp(new java.util.Date().getTime()));
+                        itemDAO.salvar(novoItemEstoque, conn);
+                        System.out.println("DEBUG REMOVER: Estoque atualizado. Nova quantidade = " + novaQuantidadeEstoque + ", Valor de venda = " + valorVendaOriginal);
+                    } else {
+                        System.out.println("DEBUG REMOVER: Aviso: Não foi possível encontrar o estoque do livro para adicionar de volta.");
+                        request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o estoque do livro para adicionar de volta.");
+                    }
+
+                    // Atualizar a 'ultima_atividade' após remover o item
+                    CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                    carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
+
+                } else {
+                    System.out.println("DEBUG REMOVER: Erro ao remover item do carrinho: " + resultado);
+                    request.getSession().setAttribute("mensagemErro", resultado);
+                }
             } else {
-                System.out.println("Erro ao remover item: " + resultado);
-                request.getSession().setAttribute("mensagemErro", resultado);
+                System.out.println("DEBUG REMOVER: Erro: Item do carrinho não encontrado com ID: " + idCarrinhoItem);
+                request.getSession().setAttribute("mensagemErro", "Erro: Item do carrinho não encontrado.");
             }
+
         } catch (Exception e) {
             request.getSession().setAttribute("mensagemErro", "Erro ao remover item do carrinho.");
             e.printStackTrace();
+        } finally {
+            if (conn != null) try { conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
         }
         response.sendRedirect("carrinho.jsp");
+    }
+
+    private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("clienteId") != null) {
+            int clienteId = (int) session.getAttribute("clienteId");
+            Connection conn = null;
+            try {
+                conn = Conexao.createConnectionToMySQL();
+                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                carrinhoDAO.removerTodosItensDoCarrinho(carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn).getId(), conn);
+                // Opcional: Você pode invalidar a sessão ou limpar outros atributos relacionados ao carrinho
+                // session.removeAttribute("carrinhoId");
+                System.out.println("Carrinho do cliente " + clienteId + " esvaziado por inatividade.");
+                response.sendRedirect("carrinho.jsp?mensagem=carrinhoEsvaziado"); // Redirecionar com uma mensagem
+            } catch (SQLException e) {
+                System.err.println("Erro ao esvaziar carrinho por inatividade: " + e.getMessage());
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erro ao esvaziar carrinho.");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
+            }
+        } else {
+            System.out.println("Sessão expirada ou cliente não logado ao tentar esvaziar carrinho por inatividade.");
+            response.sendRedirect("index.jsp?mensagem=sessaoExpirada"); // Redirecionar para a página inicial ou login
+        }
+    }
+
+    private void pingAtividadeCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("clienteId") != null) {
+            int clienteId = (int) session.getAttribute("clienteId");
+            CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+            carrinhoDAO.consultarCarrinhoPorCliente(clienteId); // Isso atualizará a 'ultima_atividade'
+            response.setStatus(HttpServletResponse.SC_OK); // Enviar uma resposta OK para o cliente
+            System.out.println("Ping de atividade recebido para o cliente " + clienteId + ". 'ultima_atividade' atualizada.");
+        } else {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // Se a sessão expirou
+            System.out.println("Ping de atividade recebido para sessão inválida.");
+        }
     }
 
     private void exibirCupons(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {

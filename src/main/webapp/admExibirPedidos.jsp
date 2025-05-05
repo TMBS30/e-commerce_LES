@@ -29,8 +29,8 @@
             <div class="input-pesquisa_livro">
                 <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
             </div>
-            <a href="#" class="link-categorias">
-                <p class="categorias">Categorias</p>
+            <a href="servlet?action=exibirEstoque" class="link-estoque">
+                <p class="estoque">Estoque</p>
             </a>
             <a href="servlet?action=exibirPedidosADM" class="link-pedidos">
                 <p class="pedidos">Pedidos</p>

@@ -1,6 +1,8 @@
 package dominio;
 
 
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 
@@ -11,7 +13,12 @@ public class Carrinho {
     private double valorCarrinho;
     private int id;
     private int clienteId;
+    private Date ultimaAtividade;
 
+    public Carrinho() {
+        this.itens = new ArrayList<>();
+        this.ultimaAtividade = new Date();
+    }
 
     public List<CarrinhoItem> getItens() {
         return itens;
@@ -59,5 +66,17 @@ public class Carrinho {
 
     public void setClienteId(int clienteId) {
         this.clienteId = clienteId;
+    }
+
+    public Date getUltimaAtividade() {
+        return ultimaAtividade;
+    }
+
+    public void setUltimaAtividade(Date ultimaAtividade) {
+        this.ultimaAtividade = ultimaAtividade;
+    }
+
+    public void atualizarUltimaAtividade() {
+        this.ultimaAtividade = new Date();
     }
 }

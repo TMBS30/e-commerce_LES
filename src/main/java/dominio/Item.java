@@ -1,10 +1,12 @@
 package dominio;
 
+import java.security.Timestamp;
+
 public class Item {
     private int id;
     private int quantidade;
     private double valorCusto;
-    private String dataEntrada;
+    private java.sql.Timestamp dataEntrada;
     private Fornecedor fornecedor;
     private double valorVenda;
     private int livroId;
@@ -52,11 +54,11 @@ public class Item {
         this.fornecedor = fornecedor;
     }
 
-    public String getDataEntrada() {
+    public java.sql.Timestamp getDataEntrada() {
         return dataEntrada;
     }
 
-    public void setDataEntrada(String dataEntrada) {
+    public void setDataEntrada(java.sql.Timestamp dataEntrada) { // Alterado para java.sql.Timestamp
         this.dataEntrada = dataEntrada;
     }
 
@@ -83,4 +85,5 @@ public class Item {
     public void setLivro(Livro livro) {
         this.livro = livro;
     }
+
 }

@@ -4,7 +4,7 @@
 <head>
     <meta charset="ISO-8859-1">
     <title>Home | PageStation</title>
-    <link rel="stylesheet" href="css/home.css?v=<%= System.currentTimeMillis()%>">
+    <link rel="stylesheet" href="css/admHome.css?v=<%= System.currentTimeMillis()%>">
 </head>
 <body>
 <%@page import="java.util.List, dao.*, dominio.*, controle.*, java.util.Map"%>
@@ -36,8 +36,8 @@
         <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
     </div>
 
-    <a href="#" class="link-categorias">
-        <p class="categorias">Categorias</p>
+    <a href="servlet?action=exibirEstoque" class="link-estoque">
+        <p class="estoque">Estoque</p>
     </a>
 
     <a href="servlet?action=exibirPedidosADM" class="link-pedidos">

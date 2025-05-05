@@ -153,13 +153,33 @@ h2 {
     line-height: normal;
     margin-bottom: 0px;
 }
+.container-master{
+    padding: 0px 10% 0px 10%;
+}
+
 
 .container {
-    padding: 0px 10% 0px 10%;
     display: flex; /* Mantém os itens em linha */
     flex-direction: row; /* Alinha os itens horizontalmente */
     align-items: flex-start; /* Alinha os itens no topo */
     gap: 20px; /* Espaço entre o carrinho e o resumo */
+}
+
+.temporizador-inatividade {
+    background-color: #fdecea;
+    color: #d93025;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #e74c3c;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 0.9em;
+    font-style: normal;
+    font-weight: 600;
+    margin: 20px 5% 20px 0px;
+    height: 40px;
+    width: 800px;
+    align-items: right;
 }
 
 .lista-de-itens-carrinho {

@@ -10,12 +10,12 @@
 </head>
 <body>
 
-<header>
-    <a href="home.jsp" class="logo-link">
-        <h1>PageStation</h1>
-        <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
-    </a>
-</header>
+     <header>
+        <a href="servlet?action=voltarHomePage" class="logo-link">
+            <h1>PageStation</h1>
+            <img src="Imagens/PageStation - Logo.png" alt="Logo PageStation">
+        </a>
+    </header>
 
 <main>
     <%
@@ -79,7 +79,7 @@
             </div>
 
             <div class="buttons-container">
-                <button type="submit">Salvar Alteracoes</button>
+                <button type="submit">Salvar</button>
             </div>
             <div class="buttons-container">
                 <button class="voltar-button" onclick="window.location.href='consultarCartao.jsp'">Voltar</button>
