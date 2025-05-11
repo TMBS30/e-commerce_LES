@@ -2,8 +2,11 @@ package controle;
 
 import java.io.IOException;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -191,6 +194,9 @@ public class CtrlServlet extends HttpServlet {
             case "editarCartao":
                 editarCartao(request, response);
                 break;
+            case "registrarEntradaEstoque":
+                registrarEntradaEstoque(request, response);
+                break;
             case "adicionarCarrinho":
                 adicionarCarrinho(request, response);
                 break;
@@ -225,7 +231,11 @@ public class CtrlServlet extends HttpServlet {
                 atualizarStatusCompra(request, response);
                 break;
             case "autorizarTroca":
-                autorizarTroca(request, response);
+                try {
+                    autorizarTroca(request, response);
+                } catch (SQLException e) {
+                    throw new RuntimeException(e);
+                }
                 break;
             default:
                 request.setAttribute("mensagemErro", "Ação não reconhecida.");
@@ -470,13 +480,13 @@ public class CtrlServlet extends HttpServlet {
             List<Livro> listaDeLivros = livroDAO.consultarTodos();
             request.setAttribute("listaDeLivros", listaDeLivros);
 
-            ItemDAO itemDAO = new ItemDAO();
-            Map<Integer, Item> estoquePorLivro = new HashMap<>();
+            EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+            Map<Integer, Integer> estoqueAtualPorLivro = new HashMap<>(); // Mapa de idLivro para quantidade atual
             for (Livro livro : listaDeLivros) {
-                Item itemEstoque = itemDAO.consultarItemMaisRecentePorLivro(livro.getId());
-                estoquePorLivro.put(livro.getId(), itemEstoque);
+                EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn);
+                estoqueAtualPorLivro.put(livro.getId(), (estoqueAtual != null) ? estoqueAtual.getQuantidadeAtual() : 0);
             }
-            request.setAttribute("estoquePorLivro", estoquePorLivro);
+            request.setAttribute("estoqueAtualPorLivro", estoqueAtualPorLivro);
 
             RequestDispatcher dispatcher = request.getRequestDispatcher("estoque.jsp");
             dispatcher.forward(request, response);
@@ -484,6 +494,72 @@ public class CtrlServlet extends HttpServlet {
         } catch (SQLException e) {
             e.printStackTrace();
             throw new ServletException("Erro ao acessar o banco de dados para exibir o estoque.", e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    private void registrarEntradaEstoque(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
+        try {
+            conn = Conexao.createConnectionToMySQL();
+
+            int idLivro = Integer.parseInt(request.getParameter("id_livro"));
+            int qtdeEntrada = Integer.parseInt(request.getParameter("qtde_entrada"));
+            LocalDate dataEntrada = LocalDate.parse(request.getParameter("data_entrada"));
+            BigDecimal valorCusto = new BigDecimal(request.getParameter("valor_custo"));
+            String idFornecStr = request.getParameter("id_fornec");
+            Integer idFornecedor = (idFornecStr != null && !idFornecStr.isEmpty()) ? Integer.parseInt(idFornecStr) : null;
+
+            // Criar um objeto Estoque (entrada)
+            Estoque entrada = new Estoque();
+            entrada.setIdLivro(idLivro);
+            entrada.setQuantidadeEstoque(qtdeEntrada);
+            entrada.setTipoEntrada(TipoEntrada.COMPRA); // Assumindo que este formulário é para compra
+            entrada.setDataEntrada(dataEntrada);
+            entrada.setValorCusto(valorCusto);
+            entrada.setIdFornecedor(idFornecedor);
+
+            EstoqueDAO estoqueDAO = new EstoqueDAO();
+            estoqueDAO.salvar(entrada, conn); // Salvar a entrada na tabela 'estoque'
+
+            // Atualizar o estoque atual
+            EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+            EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
+
+            if (estoqueAtual == null) {
+                // Se não houver registro de estoque atual para este livro, criar um novo
+                EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
+                novoEstoqueAtual.setIdLivro(idLivro);
+                novoEstoqueAtual.setQuantidadeAtual(qtdeEntrada);
+                estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
+            } else {
+                // Se já existir, atualizar a quantidade
+                estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + qtdeEntrada);
+                estoqueAtualDAO.atualizar(estoqueAtual, conn);
+            }
+
+            request.setAttribute("mensagemSucesso", "Entrada de estoque registrada com sucesso!");
+            exibirEstoque(request, response); // Redirecionar para a página de estoque para exibir as mudanças
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Erro ao registrar entrada de estoque: " + e.getMessage());
+            exibirEstoque(request, response);
+        } catch (NumberFormatException e) {
+            request.setAttribute("mensagemErro", "Erro de formato nos dados da entrada.");
+            exibirEstoque(request, response);
+        } catch (DateTimeParseException e) {
+            request.setAttribute("mensagemErro", "Erro no formato da data de entrada.");
+            exibirEstoque(request, response);
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
@@ -1089,7 +1165,7 @@ public class CtrlServlet extends HttpServlet {
         response.sendRedirect("home.jsp");
     }
 
-    private void adicionarCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    /*private void adicionarCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("DEBUG: Entrou na servlet adicionarCarrinho");
 
         try {
@@ -1170,6 +1246,143 @@ public class CtrlServlet extends HttpServlet {
             System.out.println("DEBUG: Exceção capturada - " + e.getMessage());
             throw new ServletException("Erro ao adicionar item ao carrinho", e);
         }
+    }*/
+
+    private void adicionarCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("DEBUG: Entrou na servlet adicionarCarrinho");
+
+        Connection conn = null; // Declare a conexão aqui para o bloco finally
+        try {
+            HttpSession session = request.getSession(false);
+            if (session == null || session.getAttribute("clienteId") == null) {
+                System.out.println("DEBUG: Sessão expirada ou cliente não logado");
+                request.setAttribute("mensagemErro", "Sessão expirada ou você não está logado. Por favor, faça login novamente.");
+                request.getRequestDispatcher("login.jsp").forward(request, response); // Redireciona para login
+                return;
+            }
+
+            Integer clienteId = (Integer) session.getAttribute("clienteId");
+            System.out.println("DEBUG: clienteId = " + clienteId);
+
+            String idLivroParam = request.getParameter("idLivro");
+            String quantidadeParam = request.getParameter("quantidade");
+
+            if (idLivroParam == null || quantidadeParam == null) {
+                System.out.println("DEBUG: Parâmetros ausentes: idLivroParam=" + idLivroParam + ", quantidadeParam=" + quantidadeParam);
+                request.setAttribute("mensagemErro", "Parâmetros obrigatórios ausentes para adicionar ao carrinho.");
+                // Redireciona para uma página anterior ou de erro, dependendo da sua UI
+                request.getRequestDispatcher("pagina_anterior_ou_home.jsp").forward(request, response);
+                return;
+            }
+
+            int idLivro = Integer.parseInt(idLivroParam);
+            int quantidadeDesejada = Integer.parseInt(quantidadeParam);
+            System.out.println("DEBUG: idLivro = " + idLivro + ", quantidadeDesejada = " + quantidadeDesejada);
+
+            conn = Conexao.createConnectionToMySQL();
+            conn.setAutoCommit(false); // INICIA A TRANSAÇÃO
+
+            try {
+                // --- 1. Checar disponibilidade de estoque ---
+                EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+                EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
+
+                if (estoqueAtual == null || estoqueAtual.getQuantidadeAtual() < quantidadeDesejada) {
+                    System.out.println("DEBUG: Estoque insuficiente para o livro " + idLivro + ". Quantidade disponível: " + (estoqueAtual != null ? estoqueAtual.getQuantidadeAtual() : 0));
+                    request.setAttribute("mensagemErro", "Estoque insuficiente para o livro selecionado. Quantidade disponível: " + (estoqueAtual != null ? estoqueAtual.getQuantidadeAtual() : 0) + ".");
+                    conn.rollback(); // Desfaz qualquer alteração se houver
+                    request.getRequestDispatcher("home.jsp").forward(request, response);
+                    return; // Interrompe o processamento
+                }
+
+                // --- 2. Gerenciar o item no carrinho ---
+                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                Carrinho carrinho = carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn); // Passa a conexão da transação
+                System.out.println("DEBUG: Resultado da busca do carrinho para cliente " + clienteId + ": " + carrinho);
+                int idCarrinho = carrinho.getId();
+                System.out.println("DEBUG: idCarrinho = " + idCarrinho);
+
+                CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
+                List<CarrinhoItem> itensCarrinho = carrinhoItemDAO.consultarPorCarrinho(idCarrinho, conn); // Passa a conexão da transação
+                CarrinhoItem itemExistente = null;
+                for (CarrinhoItem item : itensCarrinho) {
+                    if (item.getIdLivro() == idLivro) {
+                        itemExistente = item;
+                        break;
+                    }
+                }
+
+                if (itemExistente != null) {
+                    // Item já existe, atualizar a quantidade no carrinho
+                    int novaQuantidadeNoCarrinho = itemExistente.getQuantidade() + quantidadeDesejada;
+
+                    // IMPORTANTE: Se a quantidade adicionada já considerou o estoque antes,
+                    // e agora estamos apenas aumentando a quantidade de um item já no carrinho,
+                    // a validação de estoque já deveria ter ocorrido.
+                    // Se o usuário pode manipular a quantidade no carrinho, você precisaria
+                    // re-validar o estoque atual menos a quantidade já no carrinho mais a nova quantidade desejada.
+                    // Por simplicidade, aqui assumimos que a 'quantidadeDesejada' já é a quantidade extra que o usuário quer adicionar.
+                    carrinhoItemDAO.atualizarQuantidade(itemExistente.getId(), novaQuantidadeNoCarrinho, conn); // Passa a conexão da transação
+                    request.setAttribute("mensagem", "Quantidade do item atualizada no carrinho.");
+                    System.out.println("DEBUG: Quantidade do item " + idLivro + " atualizada para " + novaQuantidadeNoCarrinho);
+                } else {
+                    // Item não existe, adicionar novo ao carrinho
+                    CarrinhoItem novoItem = new CarrinhoItem();
+                    novoItem.setIdCarrinho(idCarrinho);
+                    novoItem.setIdLivro(idLivro);
+                    novoItem.setQuantidade(quantidadeDesejada);
+
+                    String msgCarrinho = carrinhoItemDAO.salvar(novoItem, conn); // Passa a conexão da transação
+                    System.out.println("DEBUG: Resultado do salvar no carrinho = " + msgCarrinho);
+                    request.setAttribute("mensagem", "Item adicionado ao carrinho com sucesso.");
+                }
+
+                // --- 3. Reduzir estoque atual ---
+                estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() - quantidadeDesejada);
+                estoqueAtualDAO.atualizar(estoqueAtual, conn); // Passa a conexão da transação
+                System.out.println("DEBUG: Estoque do livro " + idLivro + " reduzido em " + quantidadeDesejada + ". Nova quantidade: " + estoqueAtual.getQuantidadeAtual());
+
+                // Atualizar a 'ultima_atividade' do carrinho
+                // Se carrinhoDAO.consultarCarrinhoPorCliente(clienteId) não atualiza a data de atividade,
+                // você precisaria de um método como: carrinhoDAO.atualizarUltimaAtividade(idCarrinho, conn);
+                // Por enquanto, manterei como está se essa linha tiver algum efeito colateral desejado.
+                //carrinhoDAO.consultarCarrinhoPorCliente(clienteId); // Se esta função *também* atualiza a data de última atividade do carrinho
+
+                conn.commit(); // CONFIRMA A TRANSAÇÃO SE TUDO OCORREU BEM
+                System.out.println("DEBUG: Transação commitada.");
+
+            } catch (SQLException e) {
+                System.out.println("DEBUG: SQLException - " + e.getMessage());
+                if (conn != null) {
+                    try {
+                        conn.rollback(); // DESFAZ TODAS AS OPERAÇÕES SE HOUVER ERRO
+                        System.out.println("DEBUG: Transação rollback.");
+                    } catch (SQLException rbEx) {
+                        System.err.println("Erro ao realizar rollback: " + rbEx.getMessage());
+                    }
+                }
+                request.setAttribute("mensagemErro", "Erro ao adicionar item ao carrinho: " + e.getMessage());
+                // Redireciona para uma página de erro ou de volta ao produto
+                request.getRequestDispatcher("home.jsp").forward(request, response);
+                return; // Interrompe o processamento
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.setAutoCommit(true); // RESTAURA O AUTOCOMMIT PARA O PADRÃO
+                        conn.close();
+                        System.out.println("DEBUG: Conexão fechada");
+                    } catch (SQLException ignored) {}
+                }
+            }
+
+            // Se tudo correu bem, redireciona para a página do carrinho
+            request.getRequestDispatcher("carrinho.jsp").forward(request, response);
+            System.out.println("DEBUG: Forward realizado para carrinho.jsp");
+
+        } catch (Exception e) {
+            System.out.println("DEBUG: Exceção capturada - " + e.getMessage());
+            throw new ServletException("Erro inesperado ao adicionar item ao carrinho", e);
+        }
     }
 
     private void alterarQuantidadeCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -1229,7 +1442,7 @@ public class CtrlServlet extends HttpServlet {
         }
     }
 
-    private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    /*private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
         try {
             conn = Conexao.createConnectionToMySQL();
@@ -1306,9 +1519,179 @@ public class CtrlServlet extends HttpServlet {
             if (conn != null) try { conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
         }
         response.sendRedirect("carrinho.jsp");
+    }*/
+
+    /*private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
+        try {
+            conn = Conexao.createConnectionToMySQL();
+            conn.setAutoCommit(false); // Iniciar transação
+
+            int idCarrinhoItem = Integer.parseInt(request.getParameter("id")); // Recebe o ID do carrinho_item
+            System.out.println("DEBUG REMOVER: Tentando excluir item do carrinho com ID " + idCarrinhoItem);
+            int clienteId = (int) request.getSession().getAttribute("clienteId");
+
+            CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
+            CarrinhoItem itemRemovido = carrinhoItemDAO.buscarPorId(idCarrinhoItem, conn);
+
+            if (itemRemovido != null) {
+                int idLivroRemovido = itemRemovido.getIdLivro();
+                int quantidadeRemovida = itemRemovido.getQuantidade();
+                System.out.println("DEBUG REMOVER: CarrinhoItem encontrado. Livro ID: " + idLivroRemovido + ", Quantidade: " + quantidadeRemovida);
+
+                // 1. Remover o item do carrinho
+                CarrinhoItem itemParaExcluir = new CarrinhoItem();
+                itemParaExcluir.setId(idCarrinhoItem); // Define o ID do item a ser excluído
+
+                // **Importante: Remova a linha de criação de conexão dentro do seu DAO,
+                // pois já estamos passando a conexão da Servlet.**
+                String resultadoExclusao = carrinhoItemDAO.excluir(itemParaExcluir, conn);
+
+                if (resultadoExclusao == null) {
+                    int linhasAfetadas = 1; // Se a exclusão foi bem-sucedida pelo DAO, consideramos 1 linha afetada
+                    System.out.println("DEBUG REMOVER: Item removido com sucesso do carrinho.");
+                    request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso do carrinho.");
+
+                    // 2. Adicionar a quantidade de volta ao estoque atual
+                    EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+                    EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivroRemovido, conn);
+
+                    if (estoqueAtual != null) {
+                        estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + quantidadeRemovida);
+                        estoqueAtualDAO.atualizar(estoqueAtual, conn);
+                        System.out.println("DEBUG REMOVER: Estoque atualizado. Nova quantidade = " + estoqueAtual.getQuantidadeAtual());
+                    } else {
+                        // Se não houver registro de estoque atual (o que seria estranho neste ponto), crie um novo
+                        EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
+                        novoEstoqueAtual.setIdLivro(idLivroRemovido);
+                        novoEstoqueAtual.setQuantidadeAtual(quantidadeRemovida);
+                        estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
+                        System.out.println("DEBUG REMOVER: Registro de estoque atual criado. Quantidade = " + quantidadeRemovida);
+                        request.getSession().setAttribute("mensagemAviso", "Aviso: Registro de estoque atual criado ao remover item.");
+                    }
+
+                    // Atualizar a 'ultima_atividade' após remover o item
+                    //CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                    //carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
+
+                    conn.commit(); // Confirmar transação
+                } else {
+                    System.out.println("DEBUG REMOVER: Erro ao remover item do carrinho: " + resultadoExclusao);
+                    request.getSession().setAttribute("mensagemErro", resultadoExclusao);
+                    conn.rollback(); // Desfazer transação
+                }
+            } else {
+                System.out.println("DEBUG REMOVER: Erro: Item do carrinho não encontrado com ID: " + idCarrinhoItem);
+                request.getSession().setAttribute("mensagemErro", "Erro: Item do carrinho não encontrado.");
+            }
+
+        } catch (Exception e) {
+            request.getSession().setAttribute("mensagemErro", "Erro ao remover item do carrinho.");
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Desfazer transação em caso de erro
+                } catch (SQLException rbEx) {
+                    System.err.println("Erro ao realizar rollback: " + rbEx.getMessage());
+                }
+            }
+            e.printStackTrace();
+        } finally {
+            if (conn != null) try { conn.setAutoCommit(true); conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
+        }
+        response.sendRedirect("carrinho.jsp");
+    }*/
+
+    private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Connection conn = null;
+        try {
+            conn = Conexao.createConnectionToMySQL();
+            conn.setAutoCommit(false); // Iniciar transação
+
+            int idCarrinhoItem = Integer.parseInt(request.getParameter("id")); // Recebe o ID do carrinho_item
+            System.out.println("DEBUG REMOVER: Tentando excluir item do carrinho com ID " + idCarrinhoItem);
+            int clienteId = (int) request.getSession().getAttribute("clienteId");
+
+            CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
+            CarrinhoItem itemRemovido = carrinhoItemDAO.buscarPorId(idCarrinhoItem, conn);
+
+            if (itemRemovido != null) {
+                int idLivroRemovido = itemRemovido.getIdLivro();
+                int quantidadeRemovida = itemRemovido.getQuantidade();
+                System.out.println("DEBUG REMOVER: CarrinhoItem encontrado. Livro ID: " + idLivroRemovido + ", Quantidade: " + quantidadeRemovida);
+
+                // 1. Remover o item do carrinho
+                CarrinhoItem itemParaExcluir = new CarrinhoItem();
+                itemParaExcluir.setId(idCarrinhoItem);
+                String resultadoExclusao = carrinhoItemDAO.excluir(itemParaExcluir, conn);
+
+                if (resultadoExclusao == null) {
+                    System.out.println("DEBUG REMOVER: Item removido com sucesso do carrinho.");
+                    request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso do carrinho.");
+
+                    // 2. Adicionar a quantidade de volta ao estoque atual
+                    EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+                    EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivroRemovido, conn);
+
+                    if (estoqueAtual != null) {
+                        estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + quantidadeRemovida);
+                        estoqueAtualDAO.atualizar(estoqueAtual, conn);
+                        System.out.println("DEBUG REMOVER: Estoque atualizado. Nova quantidade = " + estoqueAtual.getQuantidadeAtual());
+                    } else {
+                        EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
+                        novoEstoqueAtual.setIdLivro(idLivroRemovido);
+                        novoEstoqueAtual.setQuantidadeAtual(quantidadeRemovida);
+                        estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
+                        System.out.println("DEBUG REMOVER: Registro de estoque atual criado. Quantidade = " + quantidadeRemovida);
+                        request.getSession().setAttribute("mensagemAviso", "Aviso: Registro de estoque atual criado ao remover item.");
+                    }
+
+                    // 3. Registrar a reentrada na tabela 'entrada_estoque'
+                    EstoqueDAO entradaEstoqueDAO = new EstoqueDAO();
+                    // Buscar o valor de custo mais recente para este livro
+                    BigDecimal valorCusto = entradaEstoqueDAO.buscarValorCustoMaisRecente(idLivroRemovido, conn);
+
+                    if (valorCusto != null) {
+                        Estoque reentrada = new Estoque();
+                        reentrada.setIdLivro(idLivroRemovido);
+                        reentrada.setTipoEntrada(TipoEntrada.RETORNO_CARRINHO);
+                        reentrada.setQuantidadeEstoque(quantidadeRemovida);
+                        reentrada.setValorCusto(valorCusto);
+                        reentrada.setDataEntrada(LocalDate.now()); // Ou a data da exclusão do carrinho
+                        entradaEstoqueDAO.salvar(reentrada, conn);
+                        System.out.println("DEBUG REMOVER: Reentrada registrada em entrada_estoque para o livro " + idLivroRemovido + ", quantidade " + quantidadeRemovida + ", valor custo " + valorCusto);
+                    } else {
+                        System.out.println("DEBUG REMOVER: Aviso: Não foi possível encontrar o valor de custo para registrar a reentrada.");
+                        request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o valor de custo para registrar a reentrada.");
+                    }
+
+                    conn.commit(); // Confirmar transação
+                } else {
+                    System.out.println("DEBUG REMOVER: Erro ao remover item do carrinho: " + resultadoExclusao);
+                    request.getSession().setAttribute("mensagemErro", resultadoExclusao);
+                    conn.rollback(); // Desfazer transação
+                }
+            } else {
+                System.out.println("DEBUG REMOVER: Erro: Item do carrinho não encontrado com ID: " + idCarrinhoItem);
+                request.getSession().setAttribute("mensagemErro", "Erro: Item do carrinho não encontrado.");
+            }
+
+        } catch (Exception e) {
+            request.getSession().setAttribute("mensagemErro", "Erro ao remover item do carrinho.");
+            if (conn != null) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rbEx) {
+                    System.err.println("Erro ao realizar rollback: " + rbEx.getMessage());
+                }
+            }
+            e.printStackTrace();
+        } finally {
+            if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+        }
+        response.sendRedirect("carrinho.jsp");
     }
 
-    private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    /*private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
         if (session != null && session.getAttribute("clienteId") != null) {
             int clienteId = (int) session.getAttribute("clienteId");
@@ -1332,6 +1715,89 @@ public class CtrlServlet extends HttpServlet {
         } else {
             System.out.println("Sessão expirada ou cliente não logado ao tentar esvaziar carrinho por inatividade.");
             response.sendRedirect("index.jsp?mensagem=sessaoExpirada"); // Redirecionar para a página inicial ou login
+        }
+    }*/
+
+    private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("clienteId") != null) {
+            int clienteId = (int) session.getAttribute("clienteId");
+            Connection conn = null;
+            try {
+                conn = Conexao.createConnectionToMySQL();
+                conn.setAutoCommit(false); // Iniciar transação
+
+                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
+                int idCarrinho = carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn).getId();
+
+                CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
+                List<CarrinhoItem> itensDoCarrinho = carrinhoItemDAO.consultarPorCarrinho(idCarrinho, conn);
+
+                EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+                EstoqueDAO estoqueDAO = new EstoqueDAO(); // Usando seu EstoqueDAO para entrada_estoque
+
+                for (CarrinhoItem item : itensDoCarrinho) {
+                    int idLivro = item.getIdLivro();
+                    int quantidade = item.getQuantidade();
+
+                    // 1. Restituir ao estoque atual
+                    EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
+                    if (estoqueAtual != null) {
+                        estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + quantidade);
+                        estoqueAtualDAO.atualizar(estoqueAtual, conn);
+                        System.out.println("Carrinho inativo: Livro " + idLivro + " devolvido ao estoque atual. Quantidade: " + quantidade);
+                    } else {
+                        EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
+                        novoEstoqueAtual.setIdLivro(idLivro);
+                        novoEstoqueAtual.setQuantidadeAtual(quantidade);
+                        estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
+                        System.out.println("Carrinho inativo: Criado registro de estoque atual para livro " + idLivro + ". Quantidade: " + quantidade);
+                    }
+
+                    // 2. Registrar a reentrada na tabela 'entrada_estoque'
+                    BigDecimal valorCusto = estoqueDAO.buscarValorCustoMaisRecente(idLivro, conn);
+
+                    if (valorCusto != null) {
+                        dominio.Estoque reentrada = new dominio.Estoque(); // Use sua classe de domínio 'Estoque'
+                        reentrada.setIdLivro(idLivro);
+                        reentrada.setTipoEntrada(TipoEntrada.RETORNO_CARRINHO);
+                        reentrada.setQuantidadeEstoque(quantidade);
+                        reentrada.setValorCusto(valorCusto);
+                        reentrada.setDataEntrada(LocalDate.now()); // Ou a data/hora da inatividade
+                        estoqueDAO.salvar(reentrada, conn);
+                        System.out.println("Carrinho inativo: Reentrada registrada em entrada_estoque para o livro " + idLivro + ", quantidade " + quantidade + ", valor custo " + valorCusto);
+                    } else {
+                        System.out.println("Carrinho inativo: Aviso: Não foi possível encontrar o valor de custo para registrar a reentrada do livro " + idLivro + ".");
+                        request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o valor de custo para registrar a reentrada.");
+                    }
+                }
+
+                // 3. Remover todos os itens do carrinho após a restituição ao estoque e registro da reentrada
+                carrinhoDAO.removerTodosItensDoCarrinho(idCarrinho, conn);
+
+                conn.commit(); // Confirmar transação
+
+                System.out.println("Carrinho do cliente " + clienteId + " esvaziado por inatividade.");
+                response.sendRedirect("carrinho.jsp?mensagem=carrinhoEsvaziado");
+
+            } catch (SQLException e) {
+                System.err.println("Erro ao esvaziar carrinho por inatividade: " + e.getMessage());
+                if (conn != null) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException rbEx) {
+                        System.err.println("Erro ao realizar rollback: " + rbEx.getMessage());
+                    }
+                }
+                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erro ao esvaziar carrinho.");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
+            }
+        } else {
+            System.out.println("Sessão expirada ou cliente não logado ao tentar esvaziar carrinho por inatividade.");
+            response.sendRedirect("index.jsp?mensagem=sessaoExpirada");
         }
     }
 
@@ -1645,7 +2111,7 @@ public class CtrlServlet extends HttpServlet {
         }
     }
 
-    private void autorizarTroca(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    private void autorizarTroca(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, SQLException {
         String idCompraStr = request.getParameter("id_compra");
         String idClienteStr = request.getParameter("idCliente");
         String valorCompraStr = request.getParameter("valorCompra");
@@ -1653,35 +2119,88 @@ public class CtrlServlet extends HttpServlet {
         if (idCompraStr != null && !idCompraStr.isEmpty() &&
                 idClienteStr != null && !idClienteStr.isEmpty() &&
                 valorCompraStr != null && !valorCompraStr.isEmpty()) {
+            Connection conn = null;
             try {
                 int idCompra = Integer.parseInt(idCompraStr);
                 int idCliente = Integer.parseInt(idClienteStr);
                 double valorCompra = Double.parseDouble(valorCompraStr);
 
-                CompraDAO compraDAO = new CompraDAO();
+                conn = Conexao.createConnectionToMySQL();
+                conn.setAutoCommit(false); // Iniciar transação
 
-                // 1. Atualizar o status da compra para "TROCA AUTORIZADA"
+                CompraDAO compraDAO = new CompraDAO();
+                ItemPedidoDAO itemPedidoDAO = new ItemPedidoDAO();
+                EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+                EstoqueDAO estoqueDAO = new EstoqueDAO(); // Para registrar a entrada
+
+                // 1. Buscar os itens do pedido para devolver ao estoque
+                List<ItemPedido> itensDoPedido = itemPedidoDAO.consultarPorCompraId(idCompra, conn);
+
+                // 2. Atualizar o estoque e registrar a entrada para cada item devolvido
+                for (ItemPedido itemPedido : itensDoPedido) {
+                    int idLivro = itemPedido.getLivro().getId();
+                    int quantidadeDevolvida = itemPedido.getQuantidade();
+
+                    // a) Atualizar o estoque atual
+                    EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
+                    if (estoqueAtual != null) {
+                        estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + quantidadeDevolvida);
+                        estoqueAtualDAO.atualizar(estoqueAtual, conn);
+                        System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Livro " + idLivro + " devolvido ao estoque atual. Quantidade: " + quantidadeDevolvida);
+                    } else {
+                        EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
+                        novoEstoqueAtual.setIdLivro(idLivro);
+                        novoEstoqueAtual.setQuantidadeAtual(quantidadeDevolvida);
+                        estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
+                        System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Criado registro de estoque atual para livro " + idLivro + ". Quantidade: " + quantidadeDevolvida);
+                    }
+
+                    // b) Registrar a entrada na tabela 'entrada_estoque'
+                    BigDecimal valorCusto = estoqueDAO.buscarValorCustoMaisRecente(idLivro, conn);
+
+                    if (valorCusto != null) {
+                        dominio.Estoque entrada = new dominio.Estoque();
+                        entrada.setIdLivro(idLivro);
+                        entrada.setTipoEntrada(TipoEntrada.TROCA); // Definindo o tipo de entrada como TROCA
+                        entrada.setQuantidadeEstoque(quantidadeDevolvida);
+                        entrada.setValorCusto(valorCusto);
+                        entrada.setDataEntrada(LocalDate.now()); // Data da autorização da troca
+                        estoqueDAO.salvar(entrada, conn);
+                        System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Entrada de troca registrada para o livro " + idLivro + ", quantidade " + quantidadeDevolvida + ", valor custo " + valorCusto);
+                    } else {
+                        System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Aviso: Não foi possível encontrar o valor de custo para registrar a entrada de troca do livro " + idLivro + ".");
+                        request.setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o valor de custo para registrar a entrada de troca.");
+                    }
+                }
+
+                // 3. Atualizar o status da compra para "TROCA AUTORIZADA"
                 compraDAO.atualizarStatus(idCompra, StatusCompra.TROCA_AUTORIZADA.getId());
                 System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Status do pedido " + idCompra + " atualizado para TROCA AUTORIZADA.");
 
-                // 2. Gerar um código de cupom único
+                // 4. Gerar um código de cupom único
                 String codigoCupom = gerarCodigoCupomUnico();
                 System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Código de cupom gerado: " + codigoCupom);
 
-                // 3. Salvar o cupom no banco de dados
+                // 5. Salvar o cupom no banco de dados
                 compraDAO.gerarCupomTroca(valorCompra, idCliente, idCompra); // Passa o código gerado
                 System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Cupom de troca gerado para o pedido " + idCompra + ", código: " + codigoCupom + ", valor: " + valorCompra + ", cliente: " + idCliente);
 
-                // Exibir mensagem de sucesso e redirecionar
+                conn.commit(); // Confirmar transação
                 response.sendRedirect("servlet?action=exibirPedidosADM&mensagemSucesso=Troca autorizada e cupom gerado com sucesso para o pedido " + idCompra + ", código: " + codigoCupom);
                 return;
 
             } catch (NumberFormatException e) {
+                if (conn != null) conn.rollback();
                 response.sendRedirect("servlet?action=exibirPedidosADM&erro=Dados inválidos para autorizar a troca.");
                 e.printStackTrace();
             } catch (SQLException e) {
+                if (conn != null) conn.rollback();
                 response.sendRedirect("servlet?action=exibirPedidosADM&erro=Erro ao autorizar a troca ou gerar o cupom.");
                 e.printStackTrace();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            } finally {
+                if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
             }
         } else {
             response.sendRedirect("servlet?action=exibirPedidosADM&erro=Dados incompletos para autorizar a troca.");

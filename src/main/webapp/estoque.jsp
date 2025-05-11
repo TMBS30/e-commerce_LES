@@ -46,6 +46,15 @@
 
         <div class="container">
             <h2 class="titulo-pagina">Controle de Estoque</h2>
+
+            <% if (request.getAttribute("mensagemSucesso") != null) { %>
+                <p class="mensagem-sucesso"><%= request.getAttribute("mensagemSucesso") %></p>
+            <% } %>
+
+            <% if (request.getAttribute("mensagemErro") != null) { %>
+                <p class="mensagem-erro"><%= request.getAttribute("mensagemErro") %></p>
+            <% } %>
+
             <div class="lista-de-livros">
                 <%
                     LivroDAO livroDAO = new LivroDAO();
@@ -56,10 +65,9 @@
                     <p class="mensagem-nenhum-livro">Nenhum livro cadastrado no sistema.</p>
                 <%
                     } else {
-                        Map<Integer, Item> estoquePorLivro = (Map<Integer, Item>) request.getAttribute("estoquePorLivro");
+                        Map<Integer, Integer> estoqueAtualPorLivro = (Map<Integer, Integer>) request.getAttribute("estoqueAtualPorLivro");
                         for (Livro livro : listaDeLivros) {
-                            Item itemEstoque = estoquePorLivro.get(livro.getId());
-                            int quantidadeAtual = (itemEstoque != null) ? itemEstoque.getQuantidade() : 0;
+                            int quantidadeAtual = (estoqueAtualPorLivro != null && estoqueAtualPorLivro.containsKey(livro.getId())) ? estoqueAtualPorLivro.get(livro.getId()) : 0;
                 %>
                     <div class="livro-container">
                         <div class="info-livro">

@@ -93,6 +93,11 @@ public class CarrinhoItemDAO implements IDAO{
         return null;
     }
 
+    @Override
+    public String excluir(EntidadeDominio entidade) {
+        return null;
+    }
+
 
     public CarrinhoItem buscarPorId(int idCarrinhoItem, Connection conn) throws SQLException {
         CarrinhoItem carrinhoItem = null;
@@ -132,11 +137,48 @@ public class CarrinhoItemDAO implements IDAO{
         }
     }
 
-    @Override
+    /*@Override
     public String excluir(EntidadeDominio entidade) {
         System.out.println(">> CarrinhoItemDAO.excluir() chamado com: " + entidade.getClass().getName());
         CarrinhoItem carrinhoItem = (CarrinhoItem) entidade;
         Connection conn = null;
+        PreparedStatement psDeleteItem = null;
+
+        try {
+            conn = Conexao.createConnectionToMySQL();
+
+            // Excluir item diretamente pelo ID (nova chave primária)
+            String sqlDelete = "DELETE FROM carrinho_item WHERE id = ?";
+            psDeleteItem = conn.prepareStatement(sqlDelete);
+            psDeleteItem.setInt(1, carrinhoItem.getId());
+
+            int linhasAfetadas = psDeleteItem.executeUpdate();
+            System.out.println("Linhas afetadas: " + linhasAfetadas);
+
+            if (linhasAfetadas > 0) {
+                System.out.println("Item removido do carrinho com sucesso. ID do item: " + carrinhoItem.getId());
+                return null;
+            } else {
+                return "Item não encontrado no carrinho.";
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "Erro ao excluir item do carrinho: " + e.getMessage();
+        } finally {
+            try {
+                if (psDeleteItem != null) psDeleteItem.close();
+                if (conn != null) conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }*/
+
+    public String excluir(EntidadeDominio entidade,Connection conn) {
+        System.out.println(">> CarrinhoItemDAO.excluir() chamado com: " + entidade.getClass().getName());
+        CarrinhoItem carrinhoItem = (CarrinhoItem) entidade;
+        //Connection conn = null;
         PreparedStatement psDeleteItem = null;
 
         try {

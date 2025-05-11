@@ -295,66 +295,11 @@ public class CarrinhoDAO implements IDAO{
             stmt = conn.prepareStatement(sql);
             stmt.setInt(1, carrinhoId);
             stmt.executeUpdate();
-            // Atualizar a 'ultima_atividade' do carrinho após remover todos os itens
             atualizarUltimaAtividade(carrinhoId, conn);
         } finally {
             if (stmt != null) stmt.close();
         }
     }
-
-    /*public void excluirCarrinhosInativos() {
-        long tempoInatividadeLimite = TimeUnit.MINUTES.toMillis(4);
-        String sqlSelecionarInativos = "SELECT id_carrinho FROM carrinho WHERE TIMESTAMPDIFF(MINUTE, ultima_atividade, NOW()) > 4";
-        String sqlExcluirItens = "DELETE FROM carrinho_item WHERE id_carrinho = ?";
-        String sqlExcluirCarrinho = "DELETE FROM carrinho WHERE id_carrinho = ?";
-        Connection conn = null;
-        PreparedStatement pstmtSelecionar = null;
-        PreparedStatement pstmtExcluirItens = null;
-        PreparedStatement pstmtExcluirCarrinho = null;
-        ResultSet rs = null;
-
-        try {
-            conn = Conexao.createConnectionToMySQL();
-            if (conn == null) throw new SQLException("Erro ao conectar ao banco de dados");
-
-            pstmtSelecionar = conn.prepareStatement(sqlSelecionarInativos);
-            rs = pstmtSelecionar.executeQuery();
-
-            pstmtExcluirItens = conn.prepareStatement(sqlExcluirItens);
-            pstmtExcluirCarrinho = conn.prepareStatement(sqlExcluirCarrinho);
-
-            while (rs.next()) {
-                int idCarrinho = rs.getInt("id_carrinho");
-
-                // Excluir itens do carrinho
-                pstmtExcluirItens.setInt(1, idCarrinho);
-                pstmtExcluirItens.executeUpdate();
-
-                // Excluir o carrinho
-                pstmtExcluirCarrinho.setInt(1, idCarrinho);
-                pstmtExcluirCarrinho.executeUpdate();
-
-                System.out.println("Carrinho inativo (ID: " + idCarrinho + ") removido.");
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Erro ao excluir carrinhos inativos.", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        } finally {
-            try {
-                if (rs != null) rs.close();
-                if (pstmtSelecionar != null) pstmtSelecionar.close();
-                if (pstmtExcluirItens != null) pstmtExcluirItens.close();
-                if (pstmtExcluirCarrinho != null) pstmtExcluirCarrinho.close();
-                if (conn != null) conn.close();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-        }
-    }*/
-
 
     @Override
     public String excluir(EntidadeDominio entidade) {

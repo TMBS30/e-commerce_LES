@@ -28,9 +28,9 @@ public class ItemPedidoDAO implements IDAO{
         return null;
     }
 
-    public List<ItemPedido> consultarPorCompraId(int compraId) throws SQLException {
+    public List<ItemPedido> consultarPorCompraId(int compraId, Connection conn) throws SQLException {
         List<ItemPedido> itensPedido = new ArrayList<>();
-        Connection conn = null;
+        //Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
         String sql = "SELECT id_item_pedido, compra_id, livro_id, quantidade, valor_unitario FROM item_pedido WHERE compra_id = ?";
