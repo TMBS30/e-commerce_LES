@@ -1312,25 +1312,18 @@ public class CtrlServlet extends HttpServlet {
                     }
                 }
 
+                int quantidadeParaAdicionarAoCarrinho = quantidadeDesejada;
                 if (itemExistente != null) {
-                    // Item já existe, atualizar a quantidade no carrinho
-                    int novaQuantidadeNoCarrinho = itemExistente.getQuantidade() + quantidadeDesejada;
-
-                    // IMPORTANTE: Se a quantidade adicionada já considerou o estoque antes,
-                    // e agora estamos apenas aumentando a quantidade de um item já no carrinho,
-                    // a validação de estoque já deveria ter ocorrido.
-                    // Se o usuário pode manipular a quantidade no carrinho, você precisaria
-                    // re-validar o estoque atual menos a quantidade já no carrinho mais a nova quantidade desejada.
-                    // Por simplicidade, aqui assumimos que a 'quantidadeDesejada' já é a quantidade extra que o usuário quer adicionar.
-                    carrinhoItemDAO.atualizarQuantidade(itemExistente.getId(), novaQuantidadeNoCarrinho, conn); // Passa a conexão da transação
+                    quantidadeParaAdicionarAoCarrinho = quantidadeDesejada; // Se já existe, adiciona a quantidade desejada
+                    carrinhoItemDAO.atualizarQuantidade(itemExistente.getId(), itemExistente.getQuantidade() + quantidadeParaAdicionarAoCarrinho, conn); // Passa a conexão da transação
                     request.setAttribute("mensagem", "Quantidade do item atualizada no carrinho.");
-                    System.out.println("DEBUG: Quantidade do item " + idLivro + " atualizada para " + novaQuantidadeNoCarrinho);
+                    System.out.println("DEBUG: Quantidade do item " + idLivro + " atualizada para " + (itemExistente.getQuantidade() + quantidadeParaAdicionarAoCarrinho));
                 } else {
                     // Item não existe, adicionar novo ao carrinho
                     CarrinhoItem novoItem = new CarrinhoItem();
                     novoItem.setIdCarrinho(idCarrinho);
                     novoItem.setIdLivro(idLivro);
-                    novoItem.setQuantidade(quantidadeDesejada);
+                    novoItem.setQuantidade(quantidadeParaAdicionarAoCarrinho);
 
                     String msgCarrinho = carrinhoItemDAO.salvar(novoItem, conn); // Passa a conexão da transação
                     System.out.println("DEBUG: Resultado do salvar no carrinho = " + msgCarrinho);
@@ -1338,9 +1331,19 @@ public class CtrlServlet extends HttpServlet {
                 }
 
                 // --- 3. Reduzir estoque atual ---
-                estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() - quantidadeDesejada);
+                estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() - quantidadeParaAdicionarAoCarrinho);
                 estoqueAtualDAO.atualizar(estoqueAtual, conn); // Passa a conexão da transação
-                System.out.println("DEBUG: Estoque do livro " + idLivro + " reduzido em " + quantidadeDesejada + ". Nova quantidade: " + estoqueAtual.getQuantidadeAtual());
+                System.out.println("DEBUG: Estoque do livro " + idLivro + " reduzido em " + quantidadeParaAdicionarAoCarrinho + ". Nova quantidade: " + estoqueAtual.getQuantidadeAtual());
+
+                // --- 4. Registrar saída de estoque ---
+                EstoqueSaidaDAO estoqueSaidaDAO = new EstoqueSaidaDAO();
+                dominio.EstoqueSaida saida = new dominio.EstoqueSaida();
+                saida.setIdLivro(idLivro);
+                saida.setQuantidade(quantidadeParaAdicionarAoCarrinho);
+                saida.setMotivoSaida(TipoSaida.SAIDA_CARRINHO); // Motivo da saída: SAIDA_CARRINHO
+                saida.setDataSaida(LocalDate.now());
+                estoqueSaidaDAO.salvar(saida, conn);
+                System.out.println("DEBUG: Saída de " + quantidadeParaAdicionarAoCarrinho + " unidades do livro " + idLivro + " registrada em saida_estoque (motivo: SAIDA_CARRINHO).");
 
                 // Atualizar a 'ultima_atividade' do carrinho
                 // Se carrinhoDAO.consultarCarrinhoPorCliente(clienteId) não atualiza a data de atividade,
@@ -1935,9 +1938,45 @@ public class CtrlServlet extends HttpServlet {
             Compra compraParaSalvar = new Compra(clienteId, idEnderecoEntrega, idEnderecoCobranca, valorSubtotal, valorFreteEnum, valorDesconto, valorTotal, 1, numeroPedidoGerado); // Use o construtor correto
             int idCompraGerado = compraDAO.salvar(compraParaSalvar, conn);
             System.out.println("DEBUG: Compra salva com ID = " + idCompraGerado + " e Número do Pedido = " + compraParaSalvar.getNumeroPedido());
+
             ItensCompraDAO itensCompraDAO = new ItensCompraDAO();
             itensCompraDAO.salvar(idCompraGerado, itensCompra, conn);
             System.out.println("DEBUG: Itens da compra salvos");
+
+            // **INÍCIO: Lógica de saída e atualização de estoque**
+            EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+            EstoqueSaidaDAO estoqueSaidaDAO = new EstoqueSaidaDAO(); // Usando EstoqueSaidaDAO
+
+            for (ItemCompra itemCompra : itensCompra) {
+                int idLivro = itemCompra.getIdLivro();
+                int quantidadeVendida = itemCompra.getQuantidade();
+
+                // 1. Registrar a saída na tabela 'saida_estoque'
+                dominio.EstoqueSaida saida = new dominio.EstoqueSaida(); // Use sua classe de domínio EstoqueSaida
+                saida.setIdLivro(idLivro);
+                saida.setQuantidade(quantidadeVendida);
+                saida.setMotivoSaida(TipoSaida.VENDA);
+                saida.setDataSaida(LocalDate.now());
+                estoqueSaidaDAO.salvar(saida, conn);
+                System.out.println("DEBUG: Saída de " + quantidadeVendida + " unidades do livro " + idLivro + " registrada em saida_estoque.");
+
+                // 2. Subtrair a quantidade do estoque atual
+                EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
+                if (estoqueAtual != null && estoqueAtual.getQuantidadeAtual() >= quantidadeVendida) {
+                    estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() - quantidadeVendida);
+                    estoqueAtualDAO.atualizar(estoqueAtual, conn);
+                    System.out.println("DEBUG: Estoque atual do livro " + idLivro + " decrementado em " + quantidadeVendida + " unidades.");
+                } else {
+                    // Tratamento de erro caso não haja estoque suficiente
+                    conn.rollback();
+                    String mensagemErroEstoque = "Erro: Estoque insuficiente para o livro " + idLivro + ".";
+                    System.err.println("ERRO: " + mensagemErroEstoque);
+                    request.getSession().setAttribute("mensagemErro", mensagemErroEstoque);
+                    response.sendRedirect("carrinho.jsp?erroEstoque=true"); // Redirecionar de volta ao carrinho ou página de erro
+                    return; // Importante sair do método para evitar inconsistências
+                }
+            }
+            // **FIM: Lógica de saída e atualização de estoque**
 
             PagamentoCompraDAO pagamentoCompraDAO = new PagamentoCompraDAO();
             pagamentoCompraDAO.salvar(idCompraGerado, idsCartoes, valorTotal, idCupom, valorDesconto, valorFreteParaPagamento, conn);

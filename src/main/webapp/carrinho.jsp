@@ -163,7 +163,7 @@
     </script>
 
     <script>
-        const tempoLimiteInatividade = 4 * 60 * 1000;
+        const tempoLimiteInatividade = 1 * 60 * 1000;
         let tempoRestanteAtual = tempoLimiteInatividade;
         let temporizadorInterval;
 

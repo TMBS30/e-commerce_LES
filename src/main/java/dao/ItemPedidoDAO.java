@@ -33,7 +33,7 @@ public class ItemPedidoDAO implements IDAO{
         //Connection conn = null;
         PreparedStatement stmt = null;
         ResultSet rs = null;
-        String sql = "SELECT id_item_pedido, compra_id, livro_id, quantidade, valor_unitario FROM item_pedido WHERE compra_id = ?";
+        String sql = "SELECT id_item_compra, id_compra, id_livro, quantidade, valor_unitario_na_compra FROM itens_da_compra WHERE id_compra = ?";
 
         try {
             conn = Conexao.createConnectionToMySQL();
@@ -45,13 +45,13 @@ public class ItemPedidoDAO implements IDAO{
 
             while (rs.next()) {
                 ItemPedido item = new ItemPedido();
-                item.setIdItemPedido(rs.getInt("id_item_pedido"));
-                item.setIdCompra(rs.getInt("compra_id"));
-                int livroId = rs.getInt("livro_id");
+                item.setIdItemPedido(rs.getInt("id_item_compra"));
+                item.setIdCompra(rs.getInt("id_compra"));
+                int livroId = rs.getInt("id_livro");
                 Livro livro = livroDAO.consultarPorId(livroId); // Busque o livro pelo ID
                 item.setLivro(livro);
                 item.setQuantidade(rs.getInt("quantidade"));
-                item.setValorUnitario(rs.getDouble("valor_unitario"));
+                item.setValorUnitario(rs.getDouble("valor_unitario_na_compra"));
                 itensPedido.add(item);
             }
         } catch (Exception e) {

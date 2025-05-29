@@ -88,22 +88,22 @@
                                 <input type="hidden" name="id_livro" value="<%= livro.getId() %>">
 
                                 <div class="form-group">
-                                    <label for="qtde_entrada_<%= livro.getId() %>">Qtde Entrada:</label>
+                                    <label for="qtde_entrada_<%= livro.getId() %>">Qtde Entrada</label>
                                     <input type="number" id="qtde_entrada_<%= livro.getId() %>" name="qtde_entrada" min="1" value="1">
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="data_entrada_<%= livro.getId() %>">Data de Entrada:</label>
+                                    <label for="data_entrada_<%= livro.getId() %>">Data de Entrada</label>
                                     <input type="date" id="data_entrada_<%= livro.getId() %>" name="data_entrada" required>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="valor_custo_<%= livro.getId() %>">Valor Custo Un.:</label>
+                                    <label for="valor_custo_<%= livro.getId() %>">Valor Custo Un.</label>
                                     <input type="number" id="valor_custo_<%= livro.getId() %>" name="valor_custo" step="0.01" min="0.01" value="0.01" required>
                                 </div>
 
                                 <div class="fornec-container">
-                                    <label for="fornecedor_<%= livro.getId() %>">Fornecedor:</label>
+                                    <label for="fornecedor_<%= livro.getId() %>">Fornecedor</label>
                                     <select id="fornecedor_<%= livro.getId() %>" name="id_fornec" required>
                                         <option value="">Selecione</option>
                                         <%
@@ -120,7 +120,6 @@
                                 </div>
 
                                 <button type="submit" class="btn-registrar">REGISTRAR</button>
-                                <button type="button" class="btn-reentrada">REENTRADA</button>
                             </form>
                         </div>
                     </div>

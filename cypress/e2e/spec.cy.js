@@ -5,12 +5,112 @@ describe('template spec', () => {
   it('passes', () => {
     cy.visit("http://localhost:8080/e-commerce_LES/", { failOnStatusCode: false });
 
-
-
     cy.get('input[name="email_login"]').type('joao.silva@example.com');
     cy.get('input[name="senha_login"]').type('senha12a');
     cy.contains('button', 'login').click();
+
+    cy.get('input[name="email_login"]').type('sabrina.vitoria@example.com');
+        //cy.get('input[name="email_cadastro"]').type('celi.nandes@example.com');
+        cy.get('input[name="senha_login"]').type('Sabri567#');
+        // cy.get('input[name="senha_cadastro"]').type('CeliNandes4#');
+        cy.contains('button', 'login').click();
+
+        cy.contains('a.livro-item', 'A Cabana').click();
+
+        // Clica no botão "Adicionar ao Carrinho"
+        cy.contains('button', 'ADICIONAR AO CARRINHO').click();
+
+        cy.wait(6000);
+
+        cy.contains('a', 'PageStation').click();
+        cy.contains('a.livro-item', 'A Cabana').click();
+        cy.contains('button', '+').click();
+        cy.contains('button', 'COMPRAR').click();
+        cy.get('a.link-carrinho').click();
+        cy.contains('a', 'Ver meus cupons').click();
+        cy.get('input[name="habilitarTroca"]').check();
+        cy.get('input[name="idCupomTroca"]').first().check();
+        cy.contains('button', 'Salvar').click();
+        cy.contains('button', 'Voltar').click();
+        cy.get('select[name="tipoFrete"]').select('Econômico');
+        cy.contains('button', 'Finalizar Compra').click();
+        cy.contains('a', 'Adicionar/Trocar Endereco de Entrega').click();
+        cy.get('input[name="idEnderecoEntregaSelecionado"]').first().check();
+        cy.contains('button', 'Salvar Endereco de Entrega').click();
+        cy.contains('a', 'Adicionar/Trocar Endereco de Cobranca').click();
+        cy.get('input[name="idEnderecoCobrancaSelecionado"]').first().check();
+        cy.contains('button', 'Salvar Endereco de Cobranca').click();
+        cy.contains('a', 'Adicionar/Trocar Cartao').click();
+        cy.get('input[name="idsCartoes"]').first().check();
+        cy.contains('button', 'Salvar Cartoes Selecionados').click();
+        cy.contains('button', 'Confirmar Compra').click();
+        cy.contains('button', 'Pedidos').click();
+        cy.contains('a', 'Pedidos').click();
+        cy.contains('a', 'PageStation').click();
+        cy.contains('a', 'Sair').click();
+
+
+        cy.get('input[name="email_login"]').type('adm@pagestation.com');
+        cy.get('input[name="senha_login"]').type('@PageADM2025');
+        cy.contains('button', 'login').click();
+        cy.contains('a', 'Pedidos').click();
+        cy.contains('Status da Compra')
+          .parent()
+          .find('select')
+          .select('ENTREGUE');
+        cy.contains('button', 'Salvar Status').click();
+        cy.contains('a', 'PageStation').click();
+        cy.contains('a', 'Sair').click();
+
+
+        cy.get('input[name="email_login"]').type('sabrina.vitoria@example.com');
+        cy.get('input[name="senha_login"]').type('Sabri567#');
+        cy.contains('button', 'Login').click();
+        cy.contains('a', 'Pedidos').click();
+        cy.contains('button', 'Trocar').click();
+        cy.contains('button', 'Pedidos').click();
+        cy.contains('a', 'PageStation').click();
+        cy.contains('a', 'Sair').click();
+
+
+        cy.get('input[name="email_login"]').type('adm@pagestation.com');
+        cy.get('input[name="senha_login"]').type('@PageADM2025');
+        cy.contains('button', 'login').click();
+        cy.contains('a', 'Pedidos').click();
+        cy.contains('button', 'Autorizar Troca').click();
+        cy.get('a[href="servlet?action=voltarHomePageADM"]', { timeout: 10000 })
+          .should('be.visible')
+          .click();
+
+        cy.contains('a', 'Sair').click();
+
+
+        cy.get('input[name="email_login"]').type('sabrina.vitoria@example.com');
+        cy.get('input[name="senha_login"]').type('Sabri567#');
+        cy.contains('button', 'Login').click();
+        cy.contains('a', 'Pedidos').click();
+        cy.contains('a', 'Cupons').click();
+        cy.contains('a', 'PageStation').click();
+        cy.contains('a', 'Sair').click();
+
+        cy.get('input[name="email_login"]').type('adm@pagestation.com');
+        cy.get('input[name="senha_login"]').type('@PageADM2025');
+        cy.contains('button', 'login').click();
+        cy.contains('a', 'Estoque').click();
+        cy.get('input[name="qtde_entrada"]').first().type('25');
+        cy.get('input[name="data_entrada"]').first().type('2025-04-14');
+        cy.get('input[name="valor_custo"]').first().clear();
+        cy.get('input[name="valor_custo"]').first().type('29,61');
+        cy.get('select[name="id_fornec"]')
+         .first()
+         .should('be.visible')
+         .select('BOOKWIRE BRASIL')
+         .should('contain.text', 'BOOKWIRE BRASIL');
+
+        cy.contains('button', 'REGISTRAR').first().click();
     /*cy.contains('a', 'Cadastrar').click();
+
+
 
 
     cy.get('input[name="nome_cadastro"]').type('Celina Fernandes');
@@ -105,8 +205,8 @@ describe('template spec', () => {
     // cy.get('input[name="senha_cadastro"]').type('CeliNandes4#');
     cy.contains('button', 'login').click();
 
-    cy.get('a.link-user').click();
-    cy.contains('a', 'Ver Cartoes').click();
+    /*cy.get('a.link-user').click();
+    cy.contains('a', 'Ver Cartoes').click();*/
     /*cy.contains('button', 'add-novo-cartao').click();
     cy.get('input[name="nomeTitular_novoCartao"]').type('Celina Fernandes');
     cy.get('input[name="numeroCartao_novoCartao"]').type('1106878295768025');
@@ -138,10 +238,10 @@ describe('template spec', () => {
         return true;
         });*/
 
-    cy.contains('button', 'Editar Cartao').click();
+   /* cy.contains('button', 'Editar Cartao').click();
     cy.get('input[name="dataVencimento_editarCartao"]').clear();
     cy.get('input[name="dataVencimento_editarCartao"]').type('0232');
-    //cy.contains('button', 'Salvar').click();
+    //cy.contains('button', 'Salvar').click();*/
 
 
 
@@ -155,22 +255,28 @@ describe('template spec', () => {
       cy.get('input[name="codSeguranca_novoCartao"]').type('447');
       cy.get('input[name="dataVencimento_novoCartao"]').type('0131');
       cy.contains('button', 'Salvar').click();
+      cy.contains('button', 'Voltar').click();
+      cy.contains('a', 'PageStation').click();
   */
 
 
-    cy.contains('button', 'Voltar').click();
-    cy.contains('a', 'PageStation').click();
-    /*cy.contains('a.livro-item', 'A Cabana').click();
-    cy.contains('button', '+').click();
+    cy.contains('a.livro-item', 'A Cabana').click();
+
+    // Clica no botão "Adicionar ao Carrinho"
     cy.contains('button', 'ADICIONAR AO CARRINHO').click();
+
+    cy.wait(6000);
+
     cy.contains('a', 'PageStation').click();
-    cy.contains('a.livro-item', 'Algoritmo e Lógica de Programação').click();
-    cy.contains('button', 'COMPRAR').click();*/
+    cy.contains('a.livro-item', 'A Cabana').click();
+    cy.contains('button', '+').click();
+    cy.contains('button', 'COMPRAR').click();
     cy.get('a.link-carrinho').click();
     cy.contains('a', 'Ver meus cupons').click();
-    cy.get('input[name="habilitarPromocionais"]').check();
-    //cy.get('input[name="idCupomPromocional"]').first().check();
-    cy.contains('button', 'Salvar').click();
+    /*cy.get('input[name="habilitarTroca"]').check();
+    cy.get('input[name="idCupomTroca"]').first().check();
+    cy.contains('button', 'Salvar').click();*/
+    cy.contains('button', 'Voltar').click();
     cy.get('select[name="tipoFrete"]').select('Econômico');
     cy.contains('button', 'Finalizar Compra').click();
     cy.contains('a', 'Adicionar/Trocar Endereco de Entrega').click();
@@ -182,8 +288,8 @@ describe('template spec', () => {
     cy.contains('a', 'Adicionar/Trocar Cartao').click();
     cy.get('input[name="idsCartoes"]').first().check();
     cy.contains('button', 'Salvar Cartoes Selecionados').click();
-    //cy.contains('button', 'Confirmar Compra').click();
-    //cy.contains('button', 'Pedidos').click();
+    cy.contains('button', 'Confirmar Compra').click();
+    cy.contains('button', 'Pedidos').click();
     cy.contains('a', 'Pedidos').click();
     cy.contains('a', 'PageStation').click();
     cy.contains('a', 'Sair').click();
@@ -193,11 +299,11 @@ describe('template spec', () => {
     cy.get('input[name="senha_login"]').type('@PageADM2025');
     cy.contains('button', 'login').click();
     cy.contains('a', 'Pedidos').click();
-    /*cy.contains('Status da Compra')
+    cy.contains('Status da Compra')
       .parent()
       .find('select')
       .select('ENTREGUE');
-    cy.contains('button', 'Salvar Status').click();*/
+    cy.contains('button', 'Salvar Status').click();
     cy.contains('a', 'PageStation').click();
     cy.contains('a', 'Sair').click();
 
@@ -206,8 +312,8 @@ describe('template spec', () => {
     cy.get('input[name="senha_login"]').type('Sabri567#');
     cy.contains('button', 'Login').click();
     cy.contains('a', 'Pedidos').click();
-    //cy.contains('button', 'Trocar').click();
-    //cy.contains('button', 'Pedidos').click();
+    cy.contains('button', 'Trocar').click();
+    cy.contains('button', 'Pedidos').click();
     cy.contains('a', 'PageStation').click();
     cy.contains('a', 'Sair').click();
 
@@ -216,8 +322,11 @@ describe('template spec', () => {
     cy.get('input[name="senha_login"]').type('@PageADM2025');
     cy.contains('button', 'login').click();
     cy.contains('a', 'Pedidos').click();
-    //cy.contains('button', 'Autorizar Troca').click();
-    cy.contains('a', 'PageStation').click();
+    cy.contains('button', 'Autorizar Troca').click();
+    cy.get('a[href="servlet?action=voltarHomePageADM"]', { timeout: 10000 })
+      .should('be.visible')
+      .click();
+
     cy.contains('a', 'Sair').click();
 
 
@@ -227,6 +336,26 @@ describe('template spec', () => {
     cy.contains('a', 'Pedidos').click();
     cy.contains('a', 'Cupons').click();
     cy.contains('a', 'PageStation').click();
+    cy.contains('a', 'Sair').click();
+
+    cy.get('input[name="email_login"]').type('adm@pagestation.com');
+    cy.get('input[name="senha_login"]').type('@PageADM2025');
+    cy.contains('button', 'login').click();
+    cy.contains('a', 'Estoque').click();
+    cy.get('input[name="qtde_entrada"]').first().type('25');
+    cy.get('input[name="data_entrada"]').first().type('2025-04-14');
+    cy.get('input[name="valor_custo"]').first().clear();
+    cy.get('input[name="valor_custo"]').first().type('29,61');
+    cy.get('select[name="id_fornec"]')
+     .first()
+     .should('be.visible')
+     .select('BOOKWIRE BRASIL')
+     .should('contain.text', 'BOOKWIRE BRASIL');
+
+    cy.contains('button', 'REGISTRAR').first().click();
+
+
+
 
 
 
