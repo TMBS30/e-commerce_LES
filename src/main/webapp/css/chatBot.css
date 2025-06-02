@@ -1,0 +1,243 @@
+/* Importar fonte (já está no seu CSS) */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* --- Estilos Gerais (Manter ou adaptar do seu CSS existente) --- */
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body{
+    background-color: white;
+    font-family: "Montserrat Alternates", sans-serif;
+    display: flex; /* Para centralizar o header e menu-fixo */
+    flex-direction: column; /* Para empilhar header, menu e main */
+    min-height: 100vh; /* Ocupa a altura total da viewport */
+}
+
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    width: 100%; /* Ocupa toda a largura */
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: inherit;
+}
+
+h1{
+    border: 1px solid #4856ED;
+    color: #FFF;
+    font-size: 48px;
+    font-weight: 600;
+    margin: 45px 50px 45px;
+    width: 314px;
+    margin-right: 0px;
+}
+
+h2{
+    color: #0E0E0E;
+    text-align: center;
+    font-size: 48px;
+    font-weight: 600;
+    margin: 30px 0px;
+}
+
+/* --- Menu Fixo (Manter ou adaptar do seu CSS existente) --- */
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+    width: 100%; /* Garante que ocupe a largura */
+}
+
+.chatbot, .link-categorias, .link-pedidos{
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.texto-chatbot, .categorias, .pedidos, .texto-adm{
+    color: #1F1F1F;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.icone-chatbot, .icone-carrinho, .icone-user{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    border-radius: 20px;
+    border: 3px solid #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-weight: 600;
+    padding-left: 25px;
+}
+
+.link-user img, .link-carrinho img{
+    width: 35px;
+    height: 35px;
+}
+
+/* --- Estilos Específicos do Chat --- */
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Faz com que o main ocupe o espaço restante */
+    padding: 20px;
+    padding-bottom: 100px; /* Espaço para o input fixo */
+    max-width: 800px; /* Largura máxima para o chat */
+    margin: 0 auto; /* Centraliza o chat na página */
+    position: relative; /* Para posicionar o input fixo */
+}
+
+.chat-area {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Faz a área de chat ocupar o espaço restante */
+    background-color: #f0f0f0; /* Fundo leve para a área do chat */
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    margin-top: 20px;
+    margin-bottom: 20px; /* Margem antes do botão voltar */
+    min-height: 400px; /* Altura mínima para o chat */
+}
+
+.messages-container {
+    flex-grow: 1; /* Faz o contêiner de mensagens ocupar todo o espaço disponível */
+    overflow-y: auto; /* Adiciona scroll quando as mensagens excederem a altura */
+    padding-right: 10px; /* Para dar espaço para a barra de rolagem */
+    display: flex; /* Para usar flexbox para empilhar mensagens */
+    flex-direction: column;
+    gap: 10px; /* Espaçamento entre os balões */
+}
+
+.message {
+    max-width: 70%; /* Largura máxima do balão */
+    padding: 10px 15px;
+    border-radius: 20px;
+    word-wrap: break-word; /* Quebra palavras longas */
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.user-message {
+    background-color: #4856ED; /* Azul para mensagens do usuário */
+    color: white;
+    align-self: flex-end; /* Alinha o balão à direita */
+    border-bottom-right-radius: 5px; /* Canto inferior direito mais reto */
+}
+
+.bot-message {
+    background-color: #e0e0e0; /* Cinza claro para mensagens do bot */
+    color: #333;
+    align-self: flex-start; /* Alinha o balão à esquerda */
+    border-bottom-left-radius: 5px; /* Canto inferior esquerdo mais reto */
+}
+
+.error-message {
+    background-color: #ffcccc; /* Vermelho claro para mensagens de erro do bot */
+    color: #cc0000;
+    border: 1px solid #cc0000;
+}
+
+/* --- Input Fixo na Parte Inferior --- */
+.input-send-container {
+    position: sticky; /* ou fixed, dependendo do comportamento desejado */
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 15px;
+    background-color: white; /* Fundo branco para a barra de input */
+    border-top: 1px solid #ddd; /* Linha superior para separar do chat */
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1); /* Sombra para dar profundidade */
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Espaçamento entre input e botão */
+    margin-top: auto; /* Empurra para o final do flex container */
+    margin-left: -15px; /* Compensa o padding do chat-area */
+    margin-right: -15px; /* Compensa o padding do chat-area */
+    padding-left: 15px;
+    padding-right: 15px;
+    box-sizing: border-box; /* Garante que padding não aumente a largura */
+}
+
+.input-send-container form {
+    display: flex;
+    width: 100%;
+    gap: 10px;
+}
+
+.input-send-container input[type="text"] {
+    flex-grow: 1; /* Ocupa o máximo de espaço possível */
+    padding: 12px 20px;
+    border: 1px solid #ccc;
+    border-radius: 25px; /* Bordas arredondadas */
+    font-size: 16px;
+    outline: none;
+}
+
+.input-send-container button {
+    background-color: #4856ED;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.input-send-container button:hover {
+    background-color: #3742D6;
+}
+
+/* --- Botão Voltar (mantido abaixo da área do chat) --- */
+.buttons-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+    padding-bottom: 20px; /* Espaçamento inferior */
+}
+
+.voltar-button {
+    background-color: #f44336; /* Cor vermelha para "Voltar" */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.voltar-button:hover {
+    background-color: #d32f2f;
+}
+
+/* --- Removendo elementos antigos --- */
+.form, .input-container_mensagem, .input-container_resposta, .resposta-chatbot, .buttons-container label {
+    display: none; /* Esconde os elementos antigos de input/resposta */
+}

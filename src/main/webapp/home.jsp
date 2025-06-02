@@ -22,7 +22,7 @@
 
 <main>
 <div class="menu-fixo">
-    <a href="#" class="chatbot">
+    <a href="fulfillment?acao=filtro" class="chatbot">
         <p class="texto-chatbot">ChatBot</p>
         <img class="icone-chatbot"src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
     </a>
