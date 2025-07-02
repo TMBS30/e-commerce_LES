@@ -22,7 +22,7 @@
 
 <main>
 <div class="menu-fixo">
-    <a href="fulfillment?acao=filtro" class="chatbot">
+    <a href="chatBot?acao=filtro" class="chatbot">
         <p class="texto-chatbot">ChatBot</p>
         <img class="icone-chatbot"src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
     </a>
@@ -30,10 +30,6 @@
     <div class="input-pesquisa_livro">
         <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
     </div>
-
-    <a href="#" class="link-categorias">
-        <p class="categorias">Categorias</p>
-    </a>
 
     <a href="servlet?action=exibirPedidos" class="link-pedidos">
         <p class="pedidos">Pedidos</p>

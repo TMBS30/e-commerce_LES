@@ -133,6 +133,16 @@ h3{
     text-decoration: none;
 }
 
+.link-dashboard{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    text-decoration: none;
+    }
+
 .texto-chatbot{
     text-decoration: none;
     color: #1F1F1F;

@@ -126,6 +126,16 @@ h3{
     line-height: normal; 
 }
 
+.link-dashboard{
+    color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    text-decoration: none;
+    }
+
 .chatbot{
     display: flex;
     gap: 1px;

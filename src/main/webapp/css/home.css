@@ -29,7 +29,7 @@ header .logo-link {
 
 h1{
     border: 1px solid #4856ED;
-    margin-bottom: 47px; 
+    margin-bottom: 47px;
     color: #FFF;
     font-size: 48px;
     font-style: normal;
@@ -223,45 +223,39 @@ h3{
 
 /*PRODUTOS=========================================================================*/
 .produtos{
-    display: flex;
-    gap: 100px;
-    flex-direction: row;
+    display: grid; /* Altera para Grid */
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Cria colunas responsivas, 4 por linha se houver espaço */
+    gap: 30px; /* Reduz o espaço entre os itens */
     margin-top: 100px;
-     /* Alinha verticalmente o texto e a imagem */
-    text-decoration: none; /* Remove o sublinhado padrão do link */
-    justify-content: center; /* Centraliza horizontalmente */
-}
-
-.harry-potter,
-.algoritmo-logica,
-.a-cabana,
-.e-assim-que-acaba{
-    text-decoration: none; /* Remove o sublinhado padrão do link */
-}
-
-.titulo-harry-potter,
-.titulo-algoritmo-logica,
-.titulo-a-cabana,
-.titulo-e-assim-que-acaba
-{
-    padding-top: 10px;
-    color: #1A1A1A;
-    text-align: center;
-    font-size: 18px;
-    font-style: normal;
-    font-weight: 600;
-    line-height: normal;
-    height: 70px;
-    text-align: center;
+    justify-items: center; /* Centraliza os itens dentro de suas células de grid */
+    align-items: start; /* Alinha os itens ao topo de suas células */
+    max-width: 1200px; /* Define uma largura máxima para o grid para evitar esticar demais */
+    margin-left: auto; /* Centraliza o grid horizontalmente */
+    margin-right: auto; /* Centraliza o grid horizontalmente */
 }
 
 .livro-item{
-    text-decoration: none; 
-    width: 140px;
-    height: 285px;
+    text-decoration: none;
+    width: 100%; /* Permite que o item ocupe a largura da sua célula no grid */
+    max-width: 180px; /* Limita a largura máxima para manter o tamanho visual */
+    display: flex; /* Mantém o conteúdo do livro-item flexível */
+    flex-direction: column; /* Organiza o conteúdo do livro-item verticalmente */
+    align-items: center; /* Centraliza o conteúdo (imagem, título, preço) */
+    text-align: center; /* Garante que o texto dentro do item também seja centralizado */
+    height: auto; /* A altura será ajustada automaticamente */
+    margin-bottom: 20px; /* Adiciona um pequeno espaço entre as linhas */
 }
 
-.titulo{
+.imagem-livro {
+    width: 140px; /* Largura da imagem do livro */
+    height: 200px; /* Altura da imagem do livro, para padronizar */
+    object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+    border-radius: 8px; /* Opcional: bordas arredondadas para as imagens */
+}
+
+.titulo {
+    /* Mantém as propriedades existentes, mas adiciona flex-grow */
+    flex-grow: 1; /* Permite que o título ocupe o espaço restante, empurrando o preço para baixo */
     padding-top: 10px;
     color: #1A1A1A;
     text-align: center;
@@ -269,15 +263,15 @@ h3{
     font-style: normal;
     font-weight: 600;
     line-height: normal;
-    height: 70px;
-    text-align: center;
+    height: auto; /* Ajusta a altura automaticamente com base no conteúdo */
+    min-height: 70px; /* Garante um tamanho mínimo para títulos com poucas linhas */
+    display: flex; /* Para centralizar o texto verticalmente se houver altura fixa */
+    align-items: center; /* Centraliza o texto verticalmente */
+    justify-content: center; /* Centraliza o texto horizontalmente */
 }
 
-.preco-harry-potter,
-.preco-algoritmo-logica,
-.preco-a-cabana,
-.preco-e-assim-que-acaba
-{
+.preco {
+    /* Mantém as propriedades existentes */
     padding-top: 10px;
     padding-bottom: 5px;
     color: #090909;
@@ -286,6 +280,31 @@ h3{
     font-style: normal;
     font-weight: 700;
     line-height: normal;
+}
+
+
+/* Remova ou ajuste estes seletores específicos de livros se não forem mais necessários */
+.harry-potter,
+.algoritmo-logica,
+.a-cabana,
+.e-assim-que-acaba {
+    text-decoration: none;
+}
+
+.titulo-harry-potter,
+.titulo-algoritmo-logica,
+.titulo-a-cabana,
+.titulo-e-assim-que-acaba {
+    /* Estas regras podem ser simplificadas e usadas apenas pelo .titulo */
+    /* Se todos os títulos seguem o mesmo estilo, o seletor .titulo já basta */
+}
+
+.preco-harry-potter,
+.preco-algoritmo-logica,
+.preco-a-cabana,
+.preco-e-assim-que-acaba {
+    /* Estas regras podem ser simplificadas e usadas apenas pelo .preco */
+    /* Se todos os preços seguem o mesmo estilo, o seletor .preco já basta */
 }
 
 .preco{
@@ -333,4 +352,4 @@ h3{
     text-decoration: none;
     margin-top: 20px;
 }
-    
+

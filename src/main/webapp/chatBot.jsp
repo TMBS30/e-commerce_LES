@@ -2,10 +2,9 @@
 <%@ page import="dominio.*" %>
 <%@ page import="dao.*" %>
 
-
 <head>
     <title>PageBot | PageStation</title>
-    <link rel="stylesheet" type="text/css" href="css/chatBot.css">
+    <link rel="stylesheet" type="text/css" href="css/chatBot.css?v=<%= System.currentTimeMillis()%>">
 </head>
 
 <body>
@@ -70,19 +69,29 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Função para transformar URLs em links clicáveis
-        function linkify(text) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g; // Detecta URLs que começam com http:// ou https://
-            return text.replace(urlRegex, (url) => {
+        // Função para transformar URLs em links clicáveis e formatar negrito
+        function formatBotResponse(text) {
+            // Transforma URLs em links clicáveis
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            let formattedText = text.replace(urlRegex, (url) => {
                 return `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`;
             });
+
+            // Adiciona quebras de linha para texto multi-linha (se a resposta do Gemini tiver \n)
+            formattedText = formattedText.replace(/\n/g, '<br>');
+
+            // Formata negrito para texto entre asteriscos duplos (**)
+            // Isso é útil se o Gemini gerar **titulo**
+            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+            return formattedText;
         }
 
         function enviarMensagem() {
             const mensagemInput = document.getElementById('mensagemUsuario');
-            const mensagem = mensagemInput.value.trim(); // .trim() para remover espaços em branco
+            const mensagem = mensagemInput.value.trim();
 
-            if (!mensagem) { // Não envia mensagens vazias
+            if (!mensagem) {
                 return;
             }
 
@@ -90,34 +99,41 @@
 
             // Adiciona a mensagem do usuário
             messagesContainer.innerHTML += `<div class="message user-message"><p>${mensagem}</p></div>`;
-            scrollToBottom(); // Rola para a nova mensagem
+            scrollToBottom();
 
-            fetch('chatApi', {
+            // MUDANÇA 1: Alterado o endpoint para 'chatBot'
+            // MUDANÇA 2: Alterado o 'Content-Type' para 'application/json'
+            // MUDANÇA 3: O corpo da requisição agora é um JSON stringificado
+            fetch('chatBot', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/json' // Alterado para JSON
                 },
-                body: `mensagemUsuario=${encodeURIComponent(mensagem)}`
+                body: JSON.stringify({ message: mensagem }) // Envia um JSON com a mensagem
             })
             .then(response => {
                 if (!response.ok) {
+                    // Se o status HTTP for 500, ainda podemos querer ler a resposta do erro
+                    // para mostrar ao usuário, se o servlet retornar um JSON de erro.
+                    // Mas, por enquanto, lança o erro padrão.
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
-                let resposta = data.botMessage; // Pega a resposta do bot
+                // MUDANÇA 4: A resposta do bot agora está em 'data.response'
+                let resposta = data.response;
 
-                // APLICA A FUNÇÃO linkify ANTES DE INSERIR NO HTML
-                resposta = linkify(resposta);
+                // Aplica a função de formatação antes de inserir no HTML
+                resposta = formatBotResponse(resposta);
 
                 messagesContainer.innerHTML += `<div class="message bot-message"><p>${resposta}</p></div>`;
-                scrollToBottom(); // Rola para a nova mensagem
-                mensagemInput.value = ''; // Limpa o campo de entrada
+                scrollToBottom();
+                mensagemInput.value = '';
             })
             .catch(error => {
                 console.error('Erro:', error);
-                messagesContainer.innerHTML += `<div class="message bot-message error-message"><p><strong>Bot:</strong> Ocorreu um erro ao processar sua mensagem.</p></div>`;
+                messagesContainer.innerHTML += `<div class="message bot-message error-message"><p><strong>Bot:</strong> Ocorreu um erro ao processar sua mensagem. Por favor, tente novamente mais tarde.</p></div>`;
                 scrollToBottom();
                 mensagemInput.value = '';
             });

@@ -1,0 +1,223 @@
+/* Importação da fonte do Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+/* Reset básico (do seu código padrão) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Estilos globais do corpo (do seu código padrão, com a fonte Montserrat) */
+body {
+    background-color: white; /* Mantido como no seu padrão */
+    font-family: "Montserrat Alternates", sans-serif; /* Usando a fonte do seu padrão */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    margin: 0; /* Tailwind já tem um reset, mas mantemos para consistência */
+    display: flex; /* Necessário para o layout flex do dashboard */
+    flex-direction: column; /* Necessário para o layout flex do dashboard */
+    min-height: 100vh; /* Garante que o body ocupa a altura total da viewport */
+}
+
+/* Estilos do cabeçalho (combinando seu padrão e o necessário para o layout do dashboard) */
+header {
+    background-color: #4856ED; /* Cor de fundo do seu padrão */
+    height: 120px; /* Altura do seu padrão */
+    display: flex; /* Do seu padrão */
+    align-items: center; /* Do seu padrão */
+    padding: 15px 20px; /* Mantido do dashboard para espaçamento */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Mantido do dashboard */
+    justify-content: space-between; /* Mantido do dashboard */
+    z-index: 10; /* Mantido do dashboard */
+    position: sticky; /* Mantido do dashboard para fixar ao rolar */
+    top: 0; /* Mantido do dashboard */
+    /* Estas propriedades são cruciais para o layout ao lado do menu fixo */
+    width: calc(100% - 250px); /* Ajusta a largura para caber ao lado do menu fixo */
+    margin-left: 250px; /* Empurra o cabeçalho para a direita do menu fixo */
+}
+
+/* Estilos do logo no cabeçalho (do seu código padrão) */
+header .logo-link {
+    display: flex; /* Do seu padrão */
+    align-items: center; /* Do seu padrão */
+    text-decoration: none; /* Do seu padrão */
+    color: inherit; /* Do seu padrão */
+}
+
+header .logo-link h1 { /* Estilos do h1 dentro do logo (adaptado do seu padrão para o dashboard) */
+    /* Removi as bordas e margins conflitantes para o contexto do cabeçalho do dashboard */
+    color: #FFF; /* Cor do seu padrão */
+    font-size: 48px; /* Ajustado para caber melhor no cabeçalho, era 48px */
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin-right: 5px; /* Espaçamento entre o texto e a imagem */
+    width: auto; /* Remove largura fixa */
+}
+
+header .logo-link img {
+    height: 52px; /* Tamanho da imagem do logo */
+    width: auto;
+}
+
+header.dash_header {
+    background-color: #FFFFFF;
+    height: auto;
+    padding: 24px; /
+    box-shadow: none;
+    width: auto;
+    margin-left: 0;
+    position: static;
+}
+
+/* Estilos para h2 e h3 (do seu código padrão) */
+h2 {
+    color: #0E0E0E;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-top: 0; /* Garantir que não há padding extra */
+}
+
+h3 {
+    color: #000;
+    text-align: center;
+    font-family: "Montserrat Alternates";
+    font-size: 25px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: normal;
+}
+
+/* Estilos do Menu Fixo (Priorizando o layout de sidebar do dashboard, mas com estilos de texto do seu padrão) */
+.menu-fixo {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #f8f9fa; /* Fundo mais claro para a sidebar */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column; /* Essencial para que os itens fiquem um abaixo do outro */
+    align-items: center; /* Centraliza itens horizontalmente */
+    gap: 15px; /* Espaçamento entre os itens do menu, ajustei para 15px, era 60px no seu padrão horizontal */
+}
+
+.menu-fixo a {
+    padding: 10px 0;
+    text-decoration: none;
+    color: #555; /* Cor padrão para links no menu fixo */
+    font-weight: 500;
+    width: 100%;
+    text-align: center;
+    border-radius: 8px;
+    /* Estilos de transição para hover */
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.menu-fixo a:hover {
+    background-color: #e9ecef;
+    color: #333; /* Escurece um pouco no hover */
+}
+
+/* Estilo para o wrapper do conteúdo principal (essencial para o layout com sidebar) */
+.main-content-wrapper {
+    margin-left: 250px; /* Empurra o conteúdo principal para a direita do menu fixo */
+    flex-grow: 1; /* Permite que o conteúdo principal ocupe o espaço restante */
+    padding: 20px;
+    background-color: #e2e8f0; /* Cor de fundo suave para o conteúdo principal */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Telas de feedback (carregando, acesso negado) */
+#loading-screen, #access-denied-screen {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    max-width: 500px;
+    text-align: center;
+}
+
+/* Estilos específicos dos elementos dentro do menu fixo (do seu código padrão) */
+.texto-modo-adm {
+    margin-bottom: 20px; /* Espaçamento abaixo do texto "Modo: ADM" */
+}
+
+.texto-adm {
+    color: #b31414; /* Cor para texto de administrador */
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.chatbot {
+    display: flex;
+    gap: 5px; /* Espaçamento entre texto e ícone do chatbot, ajustei para melhor visualização */
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center; /* Alinha verticalmente texto e ícone */
+}
+
+.texto-chatbot, .estoque, .pedidos, .dashboard {
+    text-decoration: none;
+    color: #1F1F1F; /* Cor para textos de menu */
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot, .icone-user {
+    width: 22px; /* Tamanho dos ícones */
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa_livro {
+    margin: 20px 0; /* Espaçamento ao redor do input de pesquisa */
+    width: 100%; /* Ocupa a largura total do menu-fixo */
+}
+
+.input-pesquisa {
+    width: 100%; /* Ajustei para 100% para caber no menu fixo, seu padrão era 352px */
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color: #1F1F1F;
+    font-family: "Montserrat Alternates";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px; /* Espaçamento interno para o texto */
+    background-color: #fff; /* Fundo branco para o input */
+    outline: none; /* Remove a borda de foco padrão */
+}
+
+/* Links do menu fixo (específicos para estoque, pedidos, dashboard) */
+.link-estoque, .link-pedidos, .link-dashboard, .link-user {
+    width: 100%; /* Garante que o link ocupe a largura total para o hover */
+    display: block; /* Para que padding e margin funcionem corretamente */
+    text-align: center;
+    padding: 10px 0;
+}
+
+.link-user {
+    display: flex; /* Para alinhar o ícone de usuário */
+    justify-content: center; /* Centraliza o ícone */
+    align-items: center;
+    padding: 5px 0; /* Ajuste de padding para o ícone */
+}

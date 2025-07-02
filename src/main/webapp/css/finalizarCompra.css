@@ -168,3 +168,28 @@ h3{
     padding: 15px;
     margin: 5px 0px;
 }
+
+    .link-adicionar {
+        display: block;
+        margin-top: 10px;
+        color: blue;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+    .link-adicionar:hover {
+        color: darkblue;
+    }
+    /* Estilo para a informação do troco */
+    .troco-info {
+        font-weight: bold;
+        color: green;
+        margin-top: 10px;
+        border-top: 1px solid #eee; /* Opcional: para separar visualmente */
+        padding-top: 10px;
+    }
+    .troco-info small {
+        display: block;
+        font-size: 0.8em;
+        color: #666;
+        font-weight: normal;
+    }

@@ -27,10 +27,10 @@
          <p class="texto-adm">Modo: ADM</p>
     </div>
 
-    <a href="#" class="chatbot">
-        <p class="texto-chatbot">ChatBot</p>
-        <img class="icone-chatbot"src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
+    <a href="servlet?action=exibirDashboardADM" class="link-dashboard">
+        <p class="dashboard">Dashboard</p>
     </a>
+
 
     <div class="input-pesquisa_livro">
         <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
@@ -44,9 +44,6 @@
         <p class="pedidos">Pedidos</p>
     </a>
 
-    <a href="servlet?action=consultarInfoPessoaisADM" class="link-user">
-        <img class="icone-user" src="Imagens/Icone - User.svg" alt="Icone Consultar Informacoes Cadastrais">
-    </a>
 </div>
 
     <div class="container">

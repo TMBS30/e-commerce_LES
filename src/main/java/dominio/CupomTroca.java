@@ -1,5 +1,6 @@
 package dominio;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 public class CupomTroca {
@@ -8,7 +9,8 @@ public class CupomTroca {
     private double valorCupom;
     private int idCliente;
     private int idCompra;
-    private Date dataCriacao;
+    private LocalDate dataCriacao;
+    private boolean usado;
 
     public CupomTroca() {
     }
@@ -61,11 +63,18 @@ public class CupomTroca {
         this.idCompra = idCompra;
     }
 
-    public Date getDataCriacao() {
+    public LocalDate getDataCriacao() {
         return dataCriacao;
     }
 
-    public void setDataCriacao(Date dataCriacao) {
+    public void setDataCriacao(LocalDate dataCriacao) {
         this.dataCriacao = dataCriacao;
+    }
+    public boolean isUsado() {
+        return usado;
+    }
+
+    public void setUsado(boolean usado) {
+        this.usado = usado;
     }
 }

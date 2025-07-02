@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.time.LocalDate;
 
 import dao.*;
 import dominio.*;
@@ -107,6 +108,21 @@ public class CtrlServlet extends HttpServlet {
                 break;
             case "exibirEstoque":
                 exibirEstoque(request, response);
+                break;
+            case "exibirDashboardADM":
+                HttpSession session = request.getSession(false); // Não cria nova sessão se não existir
+                boolean isAdmin = false;
+                if (session != null && session.getAttribute("admId") != null) {
+                    isAdmin = true;
+                }
+                if (isAdmin) {
+                    System.out.println("DEBUG: Administrador logado. Encaminhando para o dashboard.");
+
+                    request.getRequestDispatcher("/dashboardAdmin.jsp").forward(request, response);
+                } else {
+                    System.out.println("DEBUG: Acesso negado. Redirecionando para página inicial.");
+                    response.sendRedirect(request.getContextPath() + "/index.jsp?error=access_denied_dashboard");
+                }
                 break;
             case "addcliente":
                 System.out.println("Redirecionando para addClienteForm.jsp");
@@ -403,20 +419,80 @@ public class CtrlServlet extends HttpServlet {
 
     private void homePage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LivroDAO livroDAO = new LivroDAO();
-        List<Livro> livros = livroDAO.consultarTodos();
-
         ItemDAO itemDAO = new ItemDAO();
+        EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
+
+        List<Livro> todosOsLivros = livroDAO.consultarTodos(); // Puxa todos os livros (sem filtro de estoque ainda)
+        List<Livro> livrosParaExibir = new ArrayList<>(); // Nova lista para os livros com estoque > 0
         Map<Integer, Double> precoPorLivro = new HashMap<>();
 
-        for (Livro livro : livros) {
-            // Buscar o menor preço do item associado a este livro
-            Double menorPreco = itemDAO.buscarMenorPrecoPorLivroId(livro.getId());
-            if (menorPreco != null) {
-                precoPorLivro.put(livro.getId(), menorPreco);
+        Connection conn = null; // Declara a conexão fora do try para o finally
+        try {
+            conn = Conexao.createConnectionToMySQL(); // Abre a conexão uma única vez
+            if (conn == null) {
+                // Em vez de LOGGER, usamos System.err.println()
+                System.err.println("Erro: Conexão nula ao tentar conectar ao banco de dados em homePage.");
+                throw new SQLException("Erro ao conectar ao banco de dados: Conexão nula.");
+            }
+
+            // Desabilita o auto-commit para caso você queira fazer operações transacionais,
+            // embora para este cenário de consulta não seja estritamente necessário.
+            // É uma boa prática para evitar commitar cada Statement individualmente.
+            // conn.setAutoCommit(false);
+
+            for (Livro livro : todosOsLivros) {
+                // 1. Verificar o estoque atual do livro
+                EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn); // Passa a conexão existente
+
+                // Apenas adiciona o livro se ele tiver estoque > 0
+                if (estoque != null && estoque.getQuantidadeAtual() > 0) {
+                    livrosParaExibir.add(livro); // Adiciona o livro à lista que será exibida
+
+                    // 2. Buscar o menor preço para este livro
+                    // Note: o método buscarMenorPrecoPorLivroId em ItemDAO abre e fecha sua própria conexão.
+                    // Para otimização máxima, seria ideal refatorá-lo para também receber uma conexão como parâmetro.
+                    // Mas, por enquanto, vamos usá-lo como está, sabendo que ele abrirá uma nova conexão para cada chamada.
+                    Double menorPreco = itemDAO.buscarMenorPrecoPorLivroId(livro.getId());
+
+                    if (menorPreco != null) {
+                        precoPorLivro.put(livro.getId(), menorPreco);
+                    } else {
+                        // Se o livro tem estoque mas por algum motivo não tem preço em 'item', defina 0.0
+                        precoPorLivro.put(livro.getId(), 0.0);
+                    }
+                }
+            }
+            // conn.commit(); // Se auto-commit foi desabilitado
+        } catch (SQLException e) {
+            // conn.rollback(); // Se auto-commit foi desabilitado e ocorreu erro
+            // Usando System.err.println() no lugar de LOGGER
+            System.err.println("Erro SQL ao carregar livros para a home: " + e.getMessage());
+            e.printStackTrace(); // Ainda é útil para ver a pilha de chamadas
+            request.setAttribute("mensagemErro", "Ocorreu um erro ao carregar os livros. Por favor, tente novamente mais tarde.");
+            request.getRequestDispatcher("erro.jsp").forward(request, response);
+            return; // Sai do método após o erro
+        } catch (Exception e) {
+            // Usando System.err.println() no lugar de LOGGER
+            System.err.println("Erro inesperado ao carregar livros para a home: " + e.getMessage());
+            e.printStackTrace(); // Ainda é útil para ver a pilha de chamadas
+            request.setAttribute("mensagemErro", "Ocorreu um erro inesperado ao carregar os livros. Por favor, tente novamente mais tarde.");
+            request.getRequestDispatcher("erro.jsp").forward(request, response);
+            return; // Sai do método após o erro
+        } finally {
+            try {
+                if (conn != null) {
+                    // Certifique-se de que a conexão é fechada apenas uma vez
+                    conn.close();
+                }
+            } catch (SQLException e) {
+                // Usando System.err.println() no lugar de LOGGER
+                System.err.println("Erro ao fechar a conexão no homePage: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
-        request.setAttribute("livros", livros);
+        // Passa a lista JÁ FILTRADA para a JSP
+        request.setAttribute("livros", livrosParaExibir);
         request.setAttribute("precos", precoPorLivro);
         request.getRequestDispatcher("home.jsp").forward(request, response);
     }
@@ -424,19 +500,66 @@ public class CtrlServlet extends HttpServlet {
 
     private void voltarHomePage(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         LivroDAO livroDAO = new LivroDAO();
-        List<Livro> livros = livroDAO.consultarTodos();
-
         ItemDAO itemDAO = new ItemDAO();
+        EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO(); // >>> NOVO: Instância do DAO de Estoque
+
+        List<Livro> todosOsLivros = livroDAO.consultarTodos(); // Puxa todos os livros (sem filtro de estoque ainda)
+        List<Livro> livrosParaExibir = new ArrayList<>(); // Nova lista para os livros com estoque > 0
         Map<Integer, Double> precoPorLivro = new HashMap<>();
 
-        for (Livro livro : livros) {
-            Double menorPreco = itemDAO.buscarMenorPrecoPorLivroId(livro.getId());
-            if (menorPreco != null) {
-                precoPorLivro.put(livro.getId(), menorPreco);
+        Connection conn = null; // >>> NOVO: Declara a conexão fora do try para o finally
+        try {
+            conn = Conexao.createConnectionToMySQL(); // >>> NOVO: Abre a conexão uma única vez
+            if (conn == null) {
+                System.err.println("Erro: Conexão nula ao tentar conectar ao banco de dados em voltarHomePage.");
+                throw new SQLException("Erro ao conectar ao banco de dados: Conexão nula.");
+            }
+
+            for (Livro livro : todosOsLivros) {
+                // 1. Verificar o estoque atual do livro
+                EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn); // Passa a conexão existente
+
+                // Apenas adiciona o livro se ele tiver estoque > 0
+                if (estoque != null && estoque.getQuantidadeAtual() > 0) {
+                    livrosParaExibir.add(livro); // Adiciona o livro à lista que será exibida
+
+                    // 2. Buscar o menor preço para este livro
+                    // O método buscarMenorPrecoPorLivroId em ItemDAO ainda abre e fecha sua própria conexão.
+                    Double menorPreco = itemDAO.buscarMenorPrecoPorLivroId(livro.getId());
+
+                    if (menorPreco != null) {
+                        precoPorLivro.put(livro.getId(), menorPreco);
+                    } else {
+                        // Se o livro tem estoque mas por algum motivo não tem preço em 'item', defina 0.0
+                        precoPorLivro.put(livro.getId(), 0.0);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Erro SQL ao carregar livros para a voltarHomePage: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Ocorreu um erro ao carregar os livros. Por favor, tente novamente mais tarde.");
+            request.getRequestDispatcher("erro.jsp").forward(request, response);
+            return;
+        } catch (Exception e) {
+            System.err.println("Erro inesperado ao carregar livros para a voltarHomePage: " + e.getMessage());
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Ocorreu um erro inesperado ao carregar os livros. Por favor, tente novamente mais tarde.");
+            request.getRequestDispatcher("erro.jsp").forward(request, response);
+            return;
+        } finally {
+            try {
+                if (conn != null) {
+                    conn.close(); // Garante que a conexão seja fechada
+                }
+            } catch (SQLException e) {
+                System.err.println("Erro ao fechar a conexão em voltarHomePage: " + e.getMessage());
+                e.printStackTrace();
             }
         }
 
-        request.setAttribute("livros", livros);
+        // Passa a lista JÁ FILTRADA para a JSP
+        request.setAttribute("livros", livrosParaExibir);
         request.setAttribute("precos", precoPorLivro);
         request.getRequestDispatcher("home.jsp").forward(request, response);
     }
@@ -1165,88 +1288,6 @@ public class CtrlServlet extends HttpServlet {
         response.sendRedirect("home.jsp");
     }
 
-    /*private void adicionarCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        System.out.println("DEBUG: Entrou na servlet adicionarCarrinho");
-
-        try {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("clienteId") == null) {
-                System.out.println("DEBUG: Sessão expirada ou cliente não logado");
-                throw new ServletException("Sessão expirada ou cliente não logado.");
-            }
-
-            Integer clienteId = (Integer) session.getAttribute("clienteId");
-            System.out.println("DEBUG: clienteId = " + clienteId);
-
-            String idLivroParam = request.getParameter("idLivro");
-            String quantidadeParam = request.getParameter("quantidade");
-
-            if (idLivroParam == null || quantidadeParam == null) {
-                System.out.println("DEBUG: Parâmetros ausentes: idLivroParam=" + idLivroParam + ", quantidadeParam=" + quantidadeParam);
-                throw new ServletException("Parâmetros obrigatórios ausentes.");
-            }
-
-            int idLivro = Integer.parseInt(idLivroParam);
-            int quantidadeDesejada = Integer.parseInt(quantidadeParam);
-            System.out.println("DEBUG: idLivro = " + idLivro + ", quantidadeDesejada = " + quantidadeDesejada);
-
-            Connection conn = null;
-            try {
-                conn = Conexao.createConnectionToMySQL();
-                System.out.println("DEBUG: Conexão com banco estabelecida");
-
-                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
-                Carrinho carrinho = carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn);
-                System.out.println("DEBUG: Resultado da busca do carrinho para cliente " + clienteId + ": " + carrinho);
-                int idCarrinho = carrinho.getId();
-                System.out.println("DEBUG: idCarrinho = " + idCarrinho);
-
-                CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
-                List<CarrinhoItem> itensCarrinho = carrinhoItemDAO.consultarPorCarrinho(idCarrinho, conn);
-                CarrinhoItem itemExistente = null;
-                for (CarrinhoItem item : itensCarrinho) {
-                    if (item.getIdLivro() == idLivro) {
-                        itemExistente = item;
-                        break;
-                    }
-                }
-
-                if (itemExistente != null) {
-                    // Item já existe, atualizar a quantidade
-                    int novaQuantidade = itemExistente.getQuantidade() + quantidadeDesejada;
-                    carrinhoItemDAO.atualizarQuantidade(itemExistente.getId(), novaQuantidade, conn); // Use o ID do carrinho_item para atualizar
-                    request.setAttribute("mensagem", "Quantidade do item atualizada no carrinho.");
-                    System.out.println("DEBUG: Quantidade do item " + idLivro + " atualizada para " + novaQuantidade);
-                } else {
-                    // Item não existe, adicionar novo
-                    CarrinhoItem novoItem = new CarrinhoItem();
-                    novoItem.setIdCarrinho(idCarrinho);
-                    novoItem.setIdLivro(idLivro);
-                    novoItem.setQuantidade(quantidadeDesejada);
-
-                    String msgCarrinho = carrinhoItemDAO.salvar(novoItem, conn);
-                    System.out.println("DEBUG: Resultado do salvar no carrinho = " + msgCarrinho);
-                    request.setAttribute("mensagem", "Item adicionado ao carrinho com sucesso.");
-                }
-
-                // Atualizar a 'ultima_atividade' do carrinho
-                carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
-
-            } catch (SQLException e) {
-                System.out.println("DEBUG: SQLException - " + e.getMessage());
-                throw new ServletException("Erro ao adicionar item ao carrinho", e);
-            } finally {
-                if (conn != null) try { conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
-            }
-
-            request.getRequestDispatcher("carrinho.jsp").forward(request, response);
-            System.out.println("DEBUG: Forward realizado para carrinho.jsp");
-
-        } catch (Exception e) {
-            System.out.println("DEBUG: Exceção capturada - " + e.getMessage());
-            throw new ServletException("Erro ao adicionar item ao carrinho", e);
-        }
-    }*/
 
     private void adicionarCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         System.out.println("DEBUG: Entrou na servlet adicionarCarrinho");
@@ -1445,164 +1486,6 @@ public class CtrlServlet extends HttpServlet {
         }
     }
 
-    /*private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Connection conn = null;
-        try {
-            conn = Conexao.createConnectionToMySQL();
-            int idCarrinhoItem = Integer.parseInt(request.getParameter("id")); // Recebe o ID do carrinho_item
-            System.out.println("DEBUG REMOVER: Tentando excluir item do carrinho com ID " + idCarrinhoItem);
-            int clienteId = (int) request.getSession().getAttribute("clienteId");
-
-            CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
-            CarrinhoItem itemRemovido = carrinhoItemDAO.buscarPorId(idCarrinhoItem, conn);
-
-            if (itemRemovido != null) {
-                int idLivroRemovido = itemRemovido.getIdLivro();
-                int quantidadeRemovida = itemRemovido.getQuantidade();
-                int idCarrinho = itemRemovido.getIdCarrinho(); // Obtém o ID do carrinho
-                System.out.println("DEBUG REMOVER: CarrinhoItem encontrado. Livro ID: " + idLivroRemovido + ", Quantidade: " + quantidadeRemovida + ", Carrinho ID: " + idCarrinho);
-
-                // Buscar o Item original para obter o valorVenda
-                ItemDAO itemDAO = new ItemDAO();
-                Item itemOriginal = itemDAO.consultarItemMaisRecentePorLivro(idLivroRemovido);
-                double valorVendaOriginal = 0.0;
-                if (itemOriginal != null) {
-                    valorVendaOriginal = itemOriginal.getValorVenda();
-                    System.out.println("DEBUG REMOVER: Valor de venda original do livro: " + valorVendaOriginal);
-                } else {
-                    System.out.println("DEBUG REMOVER: Aviso: Não foi possível encontrar o item original para obter o valor de venda.");
-                    request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o item original para obter o valor de venda.");
-                }
-
-                // 2. Remover o item do carrinho (usando a fachada)
-                IFachada fachada = new Fachada();
-                CarrinhoItem itemParaExcluir = new CarrinhoItem();
-                itemParaExcluir.setId(idCarrinhoItem); // Usa o ID correto para exclusão
-                String resultado = fachada.excluir(itemParaExcluir);
-
-                if (resultado == null) {
-                    System.out.println("DEBUG REMOVER: Item removido com sucesso do carrinho.");
-                    request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso do carrinho.");
-
-                    // 3. Adicionar a quantidade de volta ao estoque
-                    Item estoqueAtual = itemDAO.consultarItemMaisRecentePorLivro(idLivroRemovido);
-
-                    if (estoqueAtual != null) {
-                        int novaQuantidadeEstoque = estoqueAtual.getQuantidade() + quantidadeRemovida;
-                        Item novoItemEstoque = new Item();
-                        novoItemEstoque.setLivroId(idLivroRemovido);
-                        novoItemEstoque.setQuantidade(novaQuantidadeEstoque);
-                        novoItemEstoque.setValorVenda(valorVendaOriginal); // Usando o valor de venda original
-                        novoItemEstoque.setIdFornecedor(itemOriginal.getIdFornecedor());
-                        novoItemEstoque.setDataEntrada(new java.sql.Timestamp(new java.util.Date().getTime()));
-                        itemDAO.salvar(novoItemEstoque, conn);
-                        System.out.println("DEBUG REMOVER: Estoque atualizado. Nova quantidade = " + novaQuantidadeEstoque + ", Valor de venda = " + valorVendaOriginal);
-                    } else {
-                        System.out.println("DEBUG REMOVER: Aviso: Não foi possível encontrar o estoque do livro para adicionar de volta.");
-                        request.getSession().setAttribute("mensagemAviso", "Aviso: Não foi possível encontrar o estoque do livro para adicionar de volta.");
-                    }
-
-                    // Atualizar a 'ultima_atividade' após remover o item
-                    CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
-                    carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
-
-                } else {
-                    System.out.println("DEBUG REMOVER: Erro ao remover item do carrinho: " + resultado);
-                    request.getSession().setAttribute("mensagemErro", resultado);
-                }
-            } else {
-                System.out.println("DEBUG REMOVER: Erro: Item do carrinho não encontrado com ID: " + idCarrinhoItem);
-                request.getSession().setAttribute("mensagemErro", "Erro: Item do carrinho não encontrado.");
-            }
-
-        } catch (Exception e) {
-            request.getSession().setAttribute("mensagemErro", "Erro ao remover item do carrinho.");
-            e.printStackTrace();
-        } finally {
-            if (conn != null) try { conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
-        }
-        response.sendRedirect("carrinho.jsp");
-    }*/
-
-    /*private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Connection conn = null;
-        try {
-            conn = Conexao.createConnectionToMySQL();
-            conn.setAutoCommit(false); // Iniciar transação
-
-            int idCarrinhoItem = Integer.parseInt(request.getParameter("id")); // Recebe o ID do carrinho_item
-            System.out.println("DEBUG REMOVER: Tentando excluir item do carrinho com ID " + idCarrinhoItem);
-            int clienteId = (int) request.getSession().getAttribute("clienteId");
-
-            CarrinhoItemDAO carrinhoItemDAO = new CarrinhoItemDAO();
-            CarrinhoItem itemRemovido = carrinhoItemDAO.buscarPorId(idCarrinhoItem, conn);
-
-            if (itemRemovido != null) {
-                int idLivroRemovido = itemRemovido.getIdLivro();
-                int quantidadeRemovida = itemRemovido.getQuantidade();
-                System.out.println("DEBUG REMOVER: CarrinhoItem encontrado. Livro ID: " + idLivroRemovido + ", Quantidade: " + quantidadeRemovida);
-
-                // 1. Remover o item do carrinho
-                CarrinhoItem itemParaExcluir = new CarrinhoItem();
-                itemParaExcluir.setId(idCarrinhoItem); // Define o ID do item a ser excluído
-
-                // **Importante: Remova a linha de criação de conexão dentro do seu DAO,
-                // pois já estamos passando a conexão da Servlet.**
-                String resultadoExclusao = carrinhoItemDAO.excluir(itemParaExcluir, conn);
-
-                if (resultadoExclusao == null) {
-                    int linhasAfetadas = 1; // Se a exclusão foi bem-sucedida pelo DAO, consideramos 1 linha afetada
-                    System.out.println("DEBUG REMOVER: Item removido com sucesso do carrinho.");
-                    request.getSession().setAttribute("mensagemSucesso", "Item removido com sucesso do carrinho.");
-
-                    // 2. Adicionar a quantidade de volta ao estoque atual
-                    EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
-                    EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivroRemovido, conn);
-
-                    if (estoqueAtual != null) {
-                        estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() + quantidadeRemovida);
-                        estoqueAtualDAO.atualizar(estoqueAtual, conn);
-                        System.out.println("DEBUG REMOVER: Estoque atualizado. Nova quantidade = " + estoqueAtual.getQuantidadeAtual());
-                    } else {
-                        // Se não houver registro de estoque atual (o que seria estranho neste ponto), crie um novo
-                        EstoqueAtual novoEstoqueAtual = new EstoqueAtual();
-                        novoEstoqueAtual.setIdLivro(idLivroRemovido);
-                        novoEstoqueAtual.setQuantidadeAtual(quantidadeRemovida);
-                        estoqueAtualDAO.salvar(novoEstoqueAtual, conn);
-                        System.out.println("DEBUG REMOVER: Registro de estoque atual criado. Quantidade = " + quantidadeRemovida);
-                        request.getSession().setAttribute("mensagemAviso", "Aviso: Registro de estoque atual criado ao remover item.");
-                    }
-
-                    // Atualizar a 'ultima_atividade' após remover o item
-                    //CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
-                    //carrinhoDAO.consultarCarrinhoPorCliente(clienteId);
-
-                    conn.commit(); // Confirmar transação
-                } else {
-                    System.out.println("DEBUG REMOVER: Erro ao remover item do carrinho: " + resultadoExclusao);
-                    request.getSession().setAttribute("mensagemErro", resultadoExclusao);
-                    conn.rollback(); // Desfazer transação
-                }
-            } else {
-                System.out.println("DEBUG REMOVER: Erro: Item do carrinho não encontrado com ID: " + idCarrinhoItem);
-                request.getSession().setAttribute("mensagemErro", "Erro: Item do carrinho não encontrado.");
-            }
-
-        } catch (Exception e) {
-            request.getSession().setAttribute("mensagemErro", "Erro ao remover item do carrinho.");
-            if (conn != null) {
-                try {
-                    conn.rollback(); // Desfazer transação em caso de erro
-                } catch (SQLException rbEx) {
-                    System.err.println("Erro ao realizar rollback: " + rbEx.getMessage());
-                }
-            }
-            e.printStackTrace();
-        } finally {
-            if (conn != null) try { conn.setAutoCommit(true); conn.close(); System.out.println("DEBUG: Conexão fechada"); } catch (SQLException ignored) {}
-        }
-        response.sendRedirect("carrinho.jsp");
-    }*/
 
     private void removerItemCarrinho(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Connection conn = null;
@@ -1694,32 +1577,6 @@ public class CtrlServlet extends HttpServlet {
         response.sendRedirect("carrinho.jsp");
     }
 
-    /*private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("clienteId") != null) {
-            int clienteId = (int) session.getAttribute("clienteId");
-            Connection conn = null;
-            try {
-                conn = Conexao.createConnectionToMySQL();
-                CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
-                carrinhoDAO.removerTodosItensDoCarrinho(carrinhoDAO.buscarCarrinhoPorClienteId(clienteId, conn).getId(), conn);
-                // Opcional: Você pode invalidar a sessão ou limpar outros atributos relacionados ao carrinho
-                // session.removeAttribute("carrinhoId");
-                System.out.println("Carrinho do cliente " + clienteId + " esvaziado por inatividade.");
-                response.sendRedirect("carrinho.jsp?mensagem=carrinhoEsvaziado"); // Redirecionar com uma mensagem
-            } catch (SQLException e) {
-                System.err.println("Erro ao esvaziar carrinho por inatividade: " + e.getMessage());
-                response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Erro ao esvaziar carrinho.");
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            } finally {
-                if (conn != null) try { conn.close(); } catch (SQLException ignored) {}
-            }
-        } else {
-            System.out.println("Sessão expirada ou cliente não logado ao tentar esvaziar carrinho por inatividade.");
-            response.sendRedirect("index.jsp?mensagem=sessaoExpirada"); // Redirecionar para a página inicial ou login
-        }
-    }*/
 
     private void esvaziarCarrinhoInativo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HttpSession session = request.getSession(false);
@@ -1854,11 +1711,52 @@ public class CtrlServlet extends HttpServlet {
             }
         }
 
+        Cupom cupomPromocional = (Cupom) session.getAttribute("cupomSelecionado");
+        CupomTroca cupomTroca = (CupomTroca) session.getAttribute("cupomTrocaSelecionado");
+
+        double descontoPromocional = (cupomPromocional != null) ? cupomPromocional.getValor() : 0.00;
+        double descontoTroca = (cupomTroca != null) ? cupomTroca.getValorCupom() : 0.00;
+
+        // ***** ALTERAÇÃO AQUI *****
+        // Calcula o valor total dos cupons aplicados
+        double totalCuponsAplicados = descontoPromocional + descontoTroca;
+
+        // Calcula o valor total do pedido ANTES dos cupons (Subtotal + Frete)
+        double valorTotalPedidoSemCupons = subtotal + valorFrete;
+
+        double valorFinalAPagar;
+        double valorTrocoGerado = 0.0; // Inicializa o troco como zero
+
+        // Lógica para calcular valor final e troco
+        if (totalCuponsAplicados > valorTotalPedidoSemCupons) {
+            // Se o valor dos cupons é maior que o total do pedido
+            valorFinalAPagar = 0.0; // O cliente não paga nada
+            valorTrocoGerado = totalCuponsAplicados - valorTotalPedidoSemCupons;
+        } else {
+            // Se o valor dos cupons é menor ou igual ao total do pedido
+            valorFinalAPagar = valorTotalPedidoSemCupons - totalCuponsAplicados;
+            valorTrocoGerado = 0.0; // Não há troco
+        }
+        // ***** FIM ALTERAÇÃO AQUI *****
+
+        // Arredonde os valores para duas casas decimais
+        valorFinalAPagar = Math.round(valorFinalAPagar * 100.0) / 100.0;
+        valorTrocoGerado = Math.round(valorTrocoGerado * 100.0) / 100.0;
+
         session.setAttribute("previaPedidoItens", itensCarrinho);
         session.setAttribute("previaPedidoSubtotal", subtotal);
-        session.setAttribute("previaPedidoTipoFreteSelecionadoStr", tipoFreteSelecionadoStr); // Salva a string para usar depois
-        session.setAttribute("previaPedidoValorFrete", valorFrete); // Salva o valor para exibição imediata (opcional)
-        session.setAttribute("previaPedidoTotal", subtotal + valorFrete); // Calcula o total com o frete (opcional para exibição)
+        session.setAttribute("previaPedidoTipoFreteSelecionadoStr", tipoFreteSelecionadoStr);
+        session.setAttribute("previaPedidoValorFrete", valorFrete);
+
+        session.setAttribute("previaPedidoCupomPromocional", cupomPromocional);
+        session.setAttribute("previaPedidoCupomTroca", cupomTroca);
+        session.setAttribute("previaPedidoDescontoPromocional", descontoPromocional);
+        session.setAttribute("previaPedidoDescontoTroca", descontoTroca);
+
+        // Salva o total a pagar e, mais importante, o troco na sessão
+        session.setAttribute("previaPedidoTotal", valorFinalAPagar);
+        session.setAttribute("previaPedidoTrocoGerado", valorTrocoGerado); // ***** ESTE É CRUCIAL! *****
+
         request.getRequestDispatcher("finalizarCompra.jsp").forward(request, response);
     }
 
@@ -1874,18 +1772,83 @@ public class CtrlServlet extends HttpServlet {
             }
 
             Integer clienteId = (Integer) session.getAttribute("clienteId");
-            Integer idEnderecoEntrega = Integer.parseInt(request.getParameter("idEnderecoEntrega"));
-            Integer idEnderecoCobranca = Integer.parseInt(request.getParameter("idEnderecoCobranca"));
-            double valorSubtotal = Double.parseDouble(request.getParameter("valorSubtotal"));
-            double valorDesconto = Double.parseDouble(request.getParameter("valorDesconto"));
-            double valorTotal = Double.parseDouble(request.getParameter("valorTotal"));
-            Integer idCupom = null;
+
+            // --- Correções para garantir que os parâmetros não sejam nulos antes de parsear ---
+            String idEnderecoEntregaStr = request.getParameter("idEnderecoEntrega");
+            Integer idEnderecoEntrega = null;
+            if (idEnderecoEntregaStr != null && !idEnderecoEntregaStr.isEmpty()) {
+                idEnderecoEntrega = Integer.parseInt(idEnderecoEntregaStr);
+            } else {
+                System.err.println("ERRO: idEnderecoEntrega está nulo ou vazio.");
+                throw new ServletException("Endereço de entrega não selecionado.");
+            }
+
+            String idEnderecoCobrancaStr = request.getParameter("idEnderecoCobranca");
+            Integer idEnderecoCobranca = null;
+            if (idEnderecoCobrancaStr != null && !idEnderecoCobrancaStr.isEmpty()) {
+                idEnderecoCobranca = Integer.parseInt(idEnderecoCobrancaStr);
+            } else {
+                System.err.println("ERRO: idEnderecoCobranca está nulo ou vazio.");
+                throw new ServletException("Endereço de cobrança não selecionado.");
+            }
+
+            String valorSubtotalStr = request.getParameter("valorSubtotal");
+            double valorSubtotal = 0.0;
+            if (valorSubtotalStr != null && !valorSubtotalStr.isEmpty()) {
+                valorSubtotal = Double.parseDouble(valorSubtotalStr);
+            } else {
+                System.err.println("AVISO: valorSubtotal está nulo ou vazio. Usando 0.0.");
+            }
+
+            String valorDescontoStr = request.getParameter("valorDesconto");
+            double valorDesconto = 0.0; // Este é o valor total do desconto aplicado
+            if (valorDescontoStr != null && !valorDescontoStr.isEmpty()) {
+                valorDesconto = Double.parseDouble(valorDescontoStr);
+            } else {
+                System.err.println("AVISO: valorDesconto está nulo ou vazio. Usando 0.0.");
+            }
+
+            // Para o cálculo do troco, precisamos do VALOR TOTAL DA COMPRA (valor final com frete, sem cupons)
+            String valorTotalStr = request.getParameter("valorTotal");
+            double valorTotalCompra = 0.0; // Renomeado para clareza. Este é o total sem desconto de cupom ainda
+            if (valorTotalStr != null && !valorTotalStr.isEmpty()) {
+                valorTotalCompra = Double.parseDouble(valorTotalStr);
+            } else {
+                System.err.println("AVISO: valorTotal está nulo ou vazio. Usando 0.0.");
+            }
+
+            Integer idCupomPromocional = null;
+            double valorCupomPromocional = 0.0; // Adicionado para armazenar o valor do cupom promocional
             if (request.getParameter("idCupom") != null && !request.getParameter("idCupom").isEmpty()) {
                 try {
-                    idCupom = Integer.parseInt(request.getParameter("idCupom"));
+                    idCupomPromocional = Integer.parseInt(request.getParameter("idCupom"));
+
+                    if (session.getAttribute("valorCupomPromocional") != null) {
+                        valorCupomPromocional = (Double) session.getAttribute("valorCupomPromocional");
+                    } else {
+                        System.err.println("AVISO: Valor do cupom promocional não encontrado na sessão. Usando 0.0.");
+                    }
                 } catch (NumberFormatException e) {
                     System.err.println("Erro ao converter idCupom: " + request.getParameter("idCupom"));
-                    idCupom = null;
+                    idCupomPromocional = null;
+                }
+            }
+
+            Integer idCupomTroca = null;
+            double valorCupomTroca = 0.0; // Adicionado para armazenar o valor do cupom de troca
+            String idCupomTrocaStr = request.getParameter("idCupomTroca");
+            if (idCupomTrocaStr != null && !idCupomTrocaStr.isEmpty()) {
+                try {
+                    idCupomTroca = Integer.parseInt(idCupomTrocaStr);
+
+                    if (session.getAttribute("valorCupomTroca") != null) {
+                        valorCupomTroca = (Double) session.getAttribute("valorCupomTroca");
+                    } else {
+                        System.err.println("AVISO: Valor do cupom de troca não encontrado na sessão. Usando 0.0.");
+                    }
+                } catch (NumberFormatException e) {
+                    System.err.println("Erro ao converter idCupomTroca: " + idCupomTrocaStr);
+                    idCupomTroca = null;
                 }
             }
 
@@ -1910,7 +1873,9 @@ public class CtrlServlet extends HttpServlet {
             List<Integer> idsCartoes = new ArrayList<>();
             if (idsCartoesParam != null) {
                 for (String idStr : idsCartoesParam) {
-                    idsCartoes.add(Integer.parseInt(idStr));
+                    if (idStr != null && !idStr.isEmpty()) {
+                        idsCartoes.add(Integer.parseInt(idStr));
+                    }
                 }
             }
 
@@ -1918,9 +1883,37 @@ public class CtrlServlet extends HttpServlet {
             Map<String, String[]> parametros = request.getParameterMap();
             int index = 0;
             while (parametros.containsKey("itens[" + index + "].idLivro")) {
-                int idLivro = Integer.parseInt(parametros.get("itens[" + index + "].idLivro")[0]);
-                int quantidade = Integer.parseInt(parametros.get("itens[" + index + "].quantidade")[0]);
-                double valorUnitario = Double.parseDouble(parametros.get("itens[" + index + "].valorUnitario")[0]);
+                String[] idLivroArray = parametros.get("itens[" + index + "].idLivro");
+                String[] quantidadeArray = parametros.get("itens[" + index + "].quantidade");
+                String[] valorUnitarioArray = parametros.get("itens[" + index + "].valorUnitario");
+
+                int idLivro = 0;
+                if (idLivroArray != null && idLivroArray.length > 0 && idLivroArray[0] != null && !idLivroArray[0].isEmpty()) {
+                    idLivro = Integer.parseInt(idLivroArray[0]);
+                } else {
+                    System.err.println("ERRO: idLivro para o item do carrinho na posição " + index + " é nulo ou vazio. Item ignorado.");
+                    index++;
+                    continue;
+                }
+
+                int quantidade = 0;
+                if (quantidadeArray != null && quantidadeArray.length > 0 && quantidadeArray[0] != null && !quantidadeArray[0].isEmpty()) {
+                    quantidade = Integer.parseInt(quantidadeArray[0]);
+                } else {
+                    System.err.println("ERRO: quantidade para o item do carrinho na posição " + index + " é nulo ou vazio. Item ignorado.");
+                    index++;
+                    continue;
+                }
+
+                double valorUnitario = 0.0;
+                if (valorUnitarioArray != null && valorUnitarioArray.length > 0 && valorUnitarioArray[0] != null && !valorUnitarioArray[0].isEmpty()) {
+                    valorUnitario = Double.parseDouble(valorUnitarioArray[0]);
+                } else {
+                    System.err.println("ERRO: valorUnitario para o item do carrinho na posição " + index + " é nulo ou vazio. Item ignorado.");
+                    index++;
+                    continue;
+                }
+
                 ItemCompra item = new ItemCompra();
                 item.setIdLivro(idLivro);
                 item.setQuantidade(quantidade);
@@ -1929,13 +1922,20 @@ public class CtrlServlet extends HttpServlet {
                 index++;
             }
 
+            if (itensCompra.isEmpty()) {
+                System.err.println("ERRO: Nenhum item válido encontrado no carrinho para finalizar a compra.");
+                request.getSession().setAttribute("mensagemErro", "Não foi possível finalizar a compra: carrinho vazio ou com itens inválidos.");
+                response.sendRedirect("carrinho.jsp");
+                return;
+            }
+
             conn = Conexao.createConnectionToMySQL();
             conn.setAutoCommit(false);
             System.out.println("DEBUG: Conexão com banco estabelecida e transação iniciada");
 
             CompraDAO compraDAO = new CompraDAO();
             String numeroPedidoGerado = compraDAO.gerarNumeroPedidoAleatorio();
-            Compra compraParaSalvar = new Compra(clienteId, idEnderecoEntrega, idEnderecoCobranca, valorSubtotal, valorFreteEnum, valorDesconto, valorTotal, 1, numeroPedidoGerado); // Use o construtor correto
+            Compra compraParaSalvar = new Compra(clienteId, idEnderecoEntrega, idEnderecoCobranca, valorSubtotal, valorFreteEnum, valorDesconto, valorTotalCompra, 1, numeroPedidoGerado);
             int idCompraGerado = compraDAO.salvar(compraParaSalvar, conn);
             System.out.println("DEBUG: Compra salva com ID = " + idCompraGerado + " e Número do Pedido = " + compraParaSalvar.getNumeroPedido());
 
@@ -1943,16 +1943,14 @@ public class CtrlServlet extends HttpServlet {
             itensCompraDAO.salvar(idCompraGerado, itensCompra, conn);
             System.out.println("DEBUG: Itens da compra salvos");
 
-            // **INÍCIO: Lógica de saída e atualização de estoque**
             EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
-            EstoqueSaidaDAO estoqueSaidaDAO = new EstoqueSaidaDAO(); // Usando EstoqueSaidaDAO
+            EstoqueSaidaDAO estoqueSaidaDAO = new EstoqueSaidaDAO();
 
             for (ItemCompra itemCompra : itensCompra) {
                 int idLivro = itemCompra.getIdLivro();
                 int quantidadeVendida = itemCompra.getQuantidade();
 
-                // 1. Registrar a saída na tabela 'saida_estoque'
-                dominio.EstoqueSaida saida = new dominio.EstoqueSaida(); // Use sua classe de domínio EstoqueSaida
+                dominio.EstoqueSaida saida = new dominio.EstoqueSaida();
                 saida.setIdLivro(idLivro);
                 saida.setQuantidade(quantidadeVendida);
                 saida.setMotivoSaida(TipoSaida.VENDA);
@@ -1960,46 +1958,114 @@ public class CtrlServlet extends HttpServlet {
                 estoqueSaidaDAO.salvar(saida, conn);
                 System.out.println("DEBUG: Saída de " + quantidadeVendida + " unidades do livro " + idLivro + " registrada em saida_estoque.");
 
-                // 2. Subtrair a quantidade do estoque atual
                 EstoqueAtual estoqueAtual = estoqueAtualDAO.consultarPorLivroId(idLivro, conn);
                 if (estoqueAtual != null && estoqueAtual.getQuantidadeAtual() >= quantidadeVendida) {
                     estoqueAtual.setQuantidadeAtual(estoqueAtual.getQuantidadeAtual() - quantidadeVendida);
                     estoqueAtualDAO.atualizar(estoqueAtual, conn);
                     System.out.println("DEBUG: Estoque atual do livro " + idLivro + " decrementado em " + quantidadeVendida + " unidades.");
                 } else {
-                    // Tratamento de erro caso não haja estoque suficiente
                     conn.rollback();
                     String mensagemErroEstoque = "Erro: Estoque insuficiente para o livro " + idLivro + ".";
                     System.err.println("ERRO: " + mensagemErroEstoque);
                     request.getSession().setAttribute("mensagemErro", mensagemErroEstoque);
-                    response.sendRedirect("carrinho.jsp?erroEstoque=true"); // Redirecionar de volta ao carrinho ou página de erro
-                    return; // Importante sair do método para evitar inconsistências
+                    response.sendRedirect("carrinho.jsp?erroEstoque=true");
+                    return;
                 }
             }
-            // **FIM: Lógica de saída e atualização de estoque**
 
             PagamentoCompraDAO pagamentoCompraDAO = new PagamentoCompraDAO();
-            pagamentoCompraDAO.salvar(idCompraGerado, idsCartoes, valorTotal, idCupom, valorDesconto, valorFreteParaPagamento, conn);
+            pagamentoCompraDAO.salvar(idCompraGerado, idsCartoes, valorTotalCompra, idCupomPromocional, valorDesconto, valorFreteParaPagamento, conn);
             System.out.println("DEBUG: Pagamentos da compra salvos");
 
             CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
             carrinhoDAO.excluir(clienteId, conn);
             session.removeAttribute("carrinho");
-            System.out.println("DEBUG: Carrinho do cliente limpo");
+            session.removeAttribute("previaPedidoItens");
+            session.removeAttribute("previaPedidoSubtotal");
+            session.removeAttribute("previaPedidoTipoFreteSelecionadoStr");
+            session.removeAttribute("previaPedidoValorFrete");
+            session.removeAttribute("previaPedidoCupomPromocional");
+            session.removeAttribute("previaPedidoCupomTroca");
+            session.removeAttribute("previaPedidoDescontoPromocional");
+            session.removeAttribute("previaPedidoDescontoTroca");
+            session.removeAttribute("previaPedidoTotal");
+            session.removeAttribute("cupomSelecionado");
+            session.removeAttribute("cupomTrocaSelecionado");
+            System.out.println("DEBUG: Carrinho e dados de sessão do pedido limpos");
 
-            conn.commit();
+            conn.commit(); // Commit da transação principal (compra, estoque, pagamento)
             System.out.println("DEBUG: Transação commitada");
 
-            if (idCupom != null) {
+            // --- Lógica para desativar/excluir cupons após o uso ---
+            if (idCupomPromocional != null) {
                 CupomDAO cupomDAO = new CupomDAO();
-                boolean cupomExcluido = cupomDAO.excluirCupomDoCliente(clienteId, idCupom, conn);
-                if (cupomExcluido) {
-                    System.out.println("DEBUG: Cupom ID " + idCupom + " excluído para o cliente ID " + clienteId);
+                // Assumindo que excluirCupomDoCliente abre e fecha sua própria conexão se 'conn' for null,
+                // ou usa a 'conn' passada se for o caso de um método que aceita conexão.
+                // Se esse método não aceitar 'conn', remova o 'conn' do parâmetro.
+                boolean cupomDesassociado = cupomDAO.excluirCupomDoCliente(clienteId, idCupomPromocional, conn);
+                if (cupomDesassociado) {
+                    System.out.println("DEBUG: Cupom Promocional ID " + idCupomPromocional + " desassociado para o cliente ID " + clienteId);
                 } else {
-                    System.out.println("DEBUG: Falha ao excluir o cupom ID " + idCupom + " para o cliente ID " + clienteId);
+                    System.out.println("DEBUG: Falha ao desassociar o Cupom Promocional ID " + idCupomPromocional + " para o cliente ID " + clienteId);
                 }
-                session.removeAttribute("cupomSelecionado");
             }
+
+            if (idCupomTroca != null) {
+                CupomTrocaDAO cupomTrocaDAO = new CupomTrocaDAO();
+                // A exclusão de cupom de troca também está fora da transação principal,
+                // então deve abrir e fechar sua própria conexão, ou o 'conn' aqui deve ser null se não for transacional.
+                // Se seu 'excluir(int idCupomTroca, Connection conn)' aceita 'conn', pode passar.
+                // Se ele deve abrir e fechar conexão interna, você pode chamar cupomTrocaDAO.excluir(idCupomTroca, null);
+                boolean cupomExcluido = cupomTrocaDAO.excluir(idCupomTroca, conn);
+                if (cupomExcluido) {
+                    System.out.println("DEBUG: Cupom de Troca ID " + idCupomTroca + " excluído.");
+                } else {
+                    System.err.println("DEBUG: Falha ao excluir o Cupom de Troca ID " + idCupomTroca + ".");
+                }
+            }
+            // --- FIM da lógica de desativação/exclusão de cupons ---
+
+            // --- INÍCIO: Lógica para geração de NOVO cupom de troca (o troco) ---
+            // Recupere o valor do troco que foi calculado e enviado do JSP
+            String valorTrocoGeradoStr = request.getParameter("valorTrocoGerado");
+            double valorTrocoGerado = 0.0;
+            if (valorTrocoGeradoStr != null && !valorTrocoGeradoStr.isEmpty()) {
+                valorTrocoGerado = Double.parseDouble(valorTrocoGeradoStr);
+            } else {
+                System.err.println("AVISO: valorTrocoGerado está nulo ou vazio. Nenhum cupom de troco será gerado por excesso.");
+            }
+
+            // Só gera o cupom se houver um valor de troco positivo
+            if (valorTrocoGerado > 0.0) {
+                System.out.println("DEBUG: Valor a ser gerado como NOVO cupom de troca: R$" + valorTrocoGerado);
+
+                CupomTroca novoCupomTroca = new CupomTroca();
+                novoCupomTroca.setIdCliente(clienteId);
+                novoCupomTroca.setValorCupom(valorTrocoGerado);
+                novoCupomTroca.setDataCriacao(LocalDate.now()); // Isso será ignorado pelo DAO se você o removeu, mas mantém o objeto consistente.
+
+                // Gere um código único para o novo cupom
+                String novoCodigoCupom = compraDAO.gerarNumeroPedidoAleatorio(); // Reutilizando a geração de código. Adapte se tiver um gerador específico para cupons.
+                novoCupomTroca.setCodigoCupom(novoCodigoCupom);
+
+                // IMPORTANTE: Não chame novoCupomTroca.setIdCompra(...) aqui para o troco.
+                // O DAO lidará com o 0/null como NULL no banco.
+
+                CupomTrocaDAO cupomTrocaDAO = new CupomTrocaDAO();
+                try {
+                    // Chama o método 'salvar' do DAO. Ele abrirá e fechará sua própria conexão.
+                    cupomTrocaDAO.salvar(novoCupomTroca);
+
+                    session.setAttribute("mensagemSucessoCupom", "Um cupom de troca de R$ " + String.format("%.2f", valorTrocoGerado) + " foi gerado com o código: " + novoCodigoCupom);
+                    System.out.println("DEBUG: Novo cupom de troca gerado com sucesso! Código: " + novoCodigoCupom);
+
+                } catch (SQLException e) {
+                    System.err.println("ERRO SQL ao gerar novo cupom de troca: " + e.getMessage());
+                    e.printStackTrace();
+                    session.setAttribute("mensagemErroCupom", "Houve um problema ao gerar seu cupom de troca. Por favor, contate o suporte.");
+                }
+            }
+            // --- FIM: Lógica para geração de novo cupom de troca ---
 
             response.sendRedirect("mensagemCompraFinalizada.jsp");
             System.out.println("DEBUG: Redirecionado para mensagemCompraFinalizada.jsp");
@@ -2220,9 +2286,25 @@ public class CtrlServlet extends HttpServlet {
                 String codigoCupom = gerarCodigoCupomUnico();
                 System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Código de cupom gerado: " + codigoCupom);
 
-                // 5. Salvar o cupom no banco de dados
-                compraDAO.gerarCupomTroca(valorCompra, idCliente, idCompra); // Passa o código gerado
-                System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Cupom de troca gerado para o pedido " + idCompra + ", código: " + codigoCupom + ", valor: " + valorCompra + ", cliente: " + idCliente);
+                // --- INÍCIO DA MODIFICAÇÃO PARA GERAR O CUPOM DE TROCA CORRETAMENTE ---
+                // 5. Criar e Salvar o cupom de troca no banco de dados para a DEVOLUÇÃO
+                CupomTroca cupomDevolucao = new CupomTroca();
+                cupomDevolucao.setCodigoCupom(codigoCupom);
+                cupomDevolucao.setValorCupom(valorCompra); // O valor do cupom é o valor total da compra devolvida
+                cupomDevolucao.setIdCliente(idCliente);
+                cupomDevolucao.setIdCompra(idCompra); // ESTE É O PONTO CRUCIAL: Associando ao ID da compra devolvida
+                cupomDevolucao.setDataCriacao(LocalDate.now()); // Definindo a data de criação
+
+                // Instancie o CupomTrocaDAO para esta operação. Ele abre e fecha sua própria conexão.
+                CupomTrocaDAO cupomTrocaDAO = new CupomTrocaDAO();
+
+                // O método 'salvar' do CupomTrocaDAO já está preparado para receber
+                // o 'idCompra' (para devolução) ou '0' (para troco por excesso).
+                cupomTrocaDAO.salvar(cupomDevolucao);
+
+                System.out.println("[DEBUG - CtrlServlet.autorizarTroca] Cupom de troca gerado para o pedido " + idCompra +
+                        ", código: " + codigoCupom + ", valor: " + valorCompra + ", cliente: " + idCliente);
+                // --- FIM DA MODIFICAÇÃO ---
 
                 conn.commit(); // Confirmar transação
                 response.sendRedirect("servlet?action=exibirPedidosADM&mensagemSucesso=Troca autorizada e cupom gerado com sucesso para o pedido " + idCompra + ", código: " + codigoCupom);
@@ -2234,10 +2316,11 @@ public class CtrlServlet extends HttpServlet {
                 e.printStackTrace();
             } catch (SQLException e) {
                 if (conn != null) conn.rollback();
-                response.sendRedirect("servlet?action=exibirPedidosADM&erro=Erro ao autorizar a troca ou gerar o cupom.");
+                response.sendRedirect("servlet?action=exibirPedidosADM&erro=Erro ao autorizar a troca ou gerar o cupom. Detalhes: " + e.getMessage());
                 e.printStackTrace();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                if (conn != null) conn.rollback(); // Rollback em outras exceções
+                throw new RuntimeException("Erro inesperado ao autorizar troca: " + e.getMessage(), e);
             } finally {
                 if (conn != null) try { conn.setAutoCommit(true); conn.close(); } catch (SQLException ignored) {}
             }

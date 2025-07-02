@@ -34,7 +34,6 @@
                     </div>
                 </form>
                 <div class="links-container">
-                    <a href="recuperarSenha.jsp">Esqueci minha senha</a> |
                     <a href="servlet?action=cadastro">Cadastrar</a>
                 </div>
                 <div class="mensagem-erro">
