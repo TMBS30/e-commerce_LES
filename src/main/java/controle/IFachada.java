@@ -16,8 +16,9 @@ public interface IFachada {
     public String excluir(EntidadeDominio entidade);
     public List<EntidadeDominio> consultar(EntidadeDominio entidade);
     public EntidadeDominio selecionar(EntidadeDominio entidade);
+    String adicionarEnderecoParaClienteExistente(dominio.Endereco endereco) throws Exception;
 
-    String salvarCartao(Cartao cartaoSalvar) throws Exception;
+    String salvarCartao(Cartao cartaoSalvar, Integer clienteId) throws Exception;
 
     String alterarCartao(Cartao cartao) throws Exception;
 }

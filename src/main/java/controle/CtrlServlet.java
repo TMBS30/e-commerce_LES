@@ -766,53 +766,55 @@ public class CtrlServlet extends HttpServlet {
     }
 
     private void salvarNovoCartao(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            String idClienteParam = request.getParameter("idCliente");
-            System.out.println("\nId do Cliente para Novo Endereco (via parâmetro): " + idClienteParam + "\n");
+        // Captura o parâmetro 'redirect' da requisição
+        String redirectPage = request.getParameter("redirect");
+        // Define um valor padrão se o parâmetro não for fornecido
+        if (redirectPage == null || redirectPage.isEmpty()) {
+            redirectPage = "consultarCartao";
+        }
 
-            HttpSession session = request.getSession(false);
+        Integer clienteIdSessao = null; // Mudei o nome para evitar confusão
+
+        try {
+            HttpSession session = request.getSession(false); // Não cria nova sessão se não existir
+
             if (session != null) {
-                Integer clienteId = (Integer) session.getAttribute("clienteId");
-                if (clienteId != null) {
-                    System.out.println("ID do cliente recuperado da sessão: " + clienteId);
+                clienteIdSessao = (Integer) session.getAttribute("clienteId");
+                if (clienteIdSessao != null) {
+                    System.out.println("DEBUG SALVAR CARTÃO: ID do cliente recuperado da SESSÃO: " + clienteIdSessao);
                 } else {
-                    System.out.println("ID do cliente não encontrado na sessão.");
+                    System.out.println("DEBUG SALVAR CARTÃO: ID do cliente NÃO encontrado na sessão.");
                 }
             } else {
-                System.out.println("Sessão não encontrada.");
+                System.out.println("DEBUG SALVAR CARTÃO: Sessão NÃO encontrada.");
             }
 
-            if (idClienteParam == null) {
-                throw new ServletException("ID do cliente não encontrado.");
+            // --- VERIFICAÇÃO PRINCIPAL: O ID DO CLIENTE DEVE VIR DA SESSÃO ---
+            if (clienteIdSessao == null) {
+                // Se o ID do cliente não está na sessão, o usuário não está logado.
+                // Redireciona para a página de login com uma mensagem de erro.
+                System.out.println("DEBUG SALVAR CARTÃO: Cliente não logado. Redirecionando para login.");
+                request.setAttribute("mensagemErro", "Você precisa estar logado para adicionar um cartão.");
+                request.getRequestDispatcher("login.jsp").forward(request, response);
+                return; // Termina a execução do método aqui
             }
 
-            int idCliente = 0;
-            try {
-                idCliente = Integer.parseInt(idClienteParam);
-            } catch (NumberFormatException e) {
-                throw new ServletException("Formato inválido para o ID do cliente.", e);
-            }
+            // REMOVER: A lógica de pegar idClienteParam e ClienteDAO.consultarPorId(idCliente)
+            // Pois o ID da sessão é o que deve ser usado.
+            // O Cartão será associado ao cliente logado, não a um cliente buscado pelo ID que pode vir de um hidden field antigo/errado.
 
-            ClienteDAO clienteDAO = new ClienteDAO();
-            Cliente cliente = clienteDAO.consultarPorId(idCliente);
-            if (cliente == null) {
-                throw new ServletException("Cliente não encontrado.");
-            }
-            cliente.setId(idCliente);
-
-            //CODIGO DO CARTAO
             String nomeTitular = request.getParameter("nomeTitular_novoCartao");
-            System.out.println("nomeTitular: " + nomeTitular);
+            System.out.println("DEBUG SALVAR CARTÃO: nomeTitular: " + nomeTitular);
             String numeroCartao = request.getParameter("numeroCartao_novoCartao");
-            System.out.println("numeroCartao: " + numeroCartao);
+            System.out.println("DEBUG SALVAR CARTÃO: numeroCartao: " + numeroCartao);
             String codSeguranca = request.getParameter("codSeguranca_novoCartao");
-            System.out.println("codSeguranca: " + codSeguranca);
+            System.out.println("DEBUG SALVAR CARTÃO: codSeguranca: " + codSeguranca);
             String dataVencimento = request.getParameter("dataVencimento_novoCartao");
-            System.out.println("dataVencimento: " + dataVencimento);
+            System.out.println("DEBUG SALVAR CARTÃO: dataVencimento: " + dataVencimento);
             String bandeiraCartao = request.getParameter("bandeira_novoCartao");
-            System.out.println("bandeira: " + bandeiraCartao);
+            System.out.println("DEBUG SALVAR CARTÃO: bandeira: " + bandeiraCartao);
             String preferencialCartao = request.getParameter("preferencialCartao_novoCartao");
-            System.out.println("preferencialCartao: " + preferencialCartao);
+            System.out.println("DEBUG SALVAR CARTÃO: preferencialCartao: " + preferencialCartao);
 
             boolean preferencial = "true".equals(preferencialCartao);
 
@@ -824,17 +826,33 @@ public class CtrlServlet extends HttpServlet {
             cartaoSalvar.setPreferencial(preferencial);
             cartaoSalvar.setBandeiraCartao(BandeiraCartao.fromDescricao(bandeiraCartao));
 
+            // --- PONTO CRÍTICO: ASSOCIA O CARTÃO AO ID DO CLIENTE DA SESSÃO ---
+            cartaoSalvar.setIdCliente(clienteIdSessao);
+
             IFachada fachada = new Fachada();
-            System.out.println("03 idCliente armazenado na sessão: " + cliente.getId());
-            String msgNovoCartao = fachada.salvarCartao(cartaoSalvar);
-            System.out.println("04 idCliente armazenado na sessão: " + cliente.getId());
-            System.out.println("Resultado do salvar (Res): " + msgNovoCartao);
+            // A fachada.salvarCartao agora precisa do clienteIdSessao como parâmetro!
+            // String msgNovoCartao = fachada.salvarCartao(cartaoSalvar); // <-- REMOVER ESTA LINHA
+            String msgNovoCartao = fachada.salvarCartao(cartaoSalvar, clienteIdSessao); // <-- ADICIONAR ESTA LINHA
 
+            System.out.println("DEBUG SALVAR CARTÃO: ID Cliente associado ao cartão antes de chamar fachada: " + cartaoSalvar.getIdCliente());
+            System.out.println("DEBUG SALVAR CARTÃO: Resultado do salvar (Res): " + msgNovoCartao);
 
-            request.getRequestDispatcher("consultarCartao.jsp").forward(request, response);
+            // Lógica de redirecionamento condicional
+            if ("finalizarCompra".equals(redirectPage)) {
+                // Se veio da finalização de compra, retorna para a tela de seleção de cartões
+                response.sendRedirect("servlet?action=cartaoCompra");
+            } else {
+                // Para outros casos, redireciona para a página padrão ou o valor especificado
+                response.sendRedirect(redirectPage + ".jsp");
+            }
 
         } catch (Exception e) {
-            throw new ServletException("Erro ao salvar cartao", e);
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Erro ao salvar cartão: " + e.getMessage());
+            // Redireciona de volta para a página de cadastro com erro, mantendo o redirect param
+            String retornoUrl = "/adicionarNovoCartao.jsp?redirect=" + (redirectPage != null ? redirectPage : "");
+            // Se houver outros parâmetros importantes para o JSP (ex: tipo, origemFluxo), repassá-los aqui
+            request.getRequestDispatcher(retornoUrl).forward(request, response);
         }
     }
 
@@ -1142,117 +1160,138 @@ public class CtrlServlet extends HttpServlet {
     }
 
     private void salvarNovoEndereco(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        try {
-            String idClienteParam = request.getParameter("idCliente");
-            System.out.println("\nId do Cliente para Novo Endereco (via parâmetro): " + idClienteParam + "\n");
+        // Parâmetros de controle de redirecionamento e comportamento do formulário
+        String redirectPage = request.getParameter("redirect");
+        // Se o parâmetro 'redirect' não for especificado, volta para a tela de consulta de endereços por padrão
+        if (redirectPage == null || redirectPage.isEmpty()) {
+            redirectPage = "consultarEndereco";
+        }
 
+        // Parâmetro para indicar se o tipo de endereço é predefinido (usado no JSP)
+        String tipoEnderecoPredefinido = request.getParameter("tipoEnderecoPredefinido");
+
+        // NOVO: Parâmetro para identificar a origem específica dentro de um fluxo (ex: "cobranca" na finalização da compra)
+        String origemFluxo = request.getParameter("origemFluxo"); // Ex: 'cobranca' ou 'entrega' ou null
+
+        try {
             HttpSession session = request.getSession(false);
+            Integer clienteId = null;
+
             if (session != null) {
-                Integer clienteId = (Integer) session.getAttribute("clienteId");
+                clienteId = (Integer) session.getAttribute("clienteId");
                 if (clienteId != null) {
-                    System.out.println("ID do cliente recuperado da sessão: " + clienteId);
+                    System.out.println("DEBUG SALVAR ENDEREÇO: ID do cliente recuperado da sessão: " + clienteId);
                 } else {
-                    System.out.println("ID do cliente não encontrado na sessão.");
+                    System.out.println("DEBUG SALVAR ENDEREÇO: ID do cliente NÃO encontrado na sessão. Possível problema de sessão ou login.");
                 }
             } else {
-                System.out.println("Sessão não encontrada.");
+                System.out.println("DEBUG SALVAR ENDEREÇO: Sessão NÃO encontrada. Usuário não logado ou sessão expirada.");
             }
 
-            if (idClienteParam == null) {
-                throw new ServletException("ID do cliente não encontrado.");
+            if (clienteId == null) {
+                throw new ServletException("Sessão inválida ou ID do cliente não encontrado. Por favor, faça login novamente.");
             }
 
-
-            int idCliente = 0;
-            try {
-                idCliente = Integer.parseInt(idClienteParam);
-            } catch (NumberFormatException e) {
-                throw new ServletException("Formato inválido para o ID do cliente.", e);
-            }
-
-            ClienteDAO clienteDAO = new ClienteDAO();
-            Cliente cliente = clienteDAO.consultarPorId(idCliente);
-            if (cliente == null) {
-                throw new ServletException("Cliente não encontrado.");
-            }
-
-            cliente.setId(idCliente);
-
+            // --- INÍCIO DA LÓGICA DE CRIAÇÃO E POPULAÇÃO DO NOVO ENDEREÇO ---
             String nomePaisNovoEnd = request.getParameter("nomePais_NovoEnd");
-            System.out.println("SERVnomePais: " + nomePaisNovoEnd);
             String nomeEstadoNovoEnd = request.getParameter("nomeEstado_NovoEnd");
-            System.out.println("nomeEstado: " + nomeEstadoNovoEnd);
             String nomeCidadeNovoEnd = request.getParameter("nomeCidade_NovoEnd");
-            System.out.println("nomeCidade: " + nomeCidadeNovoEnd);
             String tipoLogradouroNovoEnd = request.getParameter("tipoLogradouro_NovoEnd");
-            System.out.println("tipoLogradouro: " + tipoLogradouroNovoEnd);
             String tipoResidenciaNovoEnd = request.getParameter("tipoResidencia_NovoEnd");
-            System.out.println("tipoResidencia: " + tipoResidenciaNovoEnd);
+            // Este é o tipo de endereço que foi predefinido (se houver) ou selecionado no dropdown
             String tipoEnderecoNovoEnd = request.getParameter("tipoEndereco_NovoEnd");
-            System.out.println("tipoEndereco: " + tipoEnderecoNovoEnd);
             String cepNovoEnd = request.getParameter("cep_NovoEnd");
-            System.out.println("cepRes: " + cepNovoEnd);
             String logradouroNovoEnd = request.getParameter("logradouro_NovoEnd");
-            System.out.println("logradouro: " + logradouroNovoEnd);
             String numeroNovoEnd = request.getParameter("numero_NovoEnd");
-            System.out.println("numero: " + numeroNovoEnd);
             String bairroNovoEnd = request.getParameter("bairro_NovoEnd");
-            System.out.println("bairro: " + bairroNovoEnd);
             String observacaoNovoEnd = request.getParameter("observacao_NovoEnd");
-            System.out.println("SERVobservacao: " + observacaoNovoEnd);
-
-            Endereco enderecoNovoEnd = new Endereco();
-            enderecoNovoEnd.setLogradouro(logradouroNovoEnd);
-            enderecoNovoEnd.setNumero(numeroNovoEnd);
-            enderecoNovoEnd.setBairro(bairroNovoEnd);
-            enderecoNovoEnd.setCep(cepNovoEnd);
-            enderecoNovoEnd.setObservacao(observacaoNovoEnd);
-            if (tipoResidenciaNovoEnd == null || tipoResidenciaNovoEnd.isEmpty()) {
-                throw new IllegalArgumentException("Nenhum tipo de residência selecionado.");
-            } else {
-                enderecoNovoEnd.setTipoResidencia(TipoResidencia.fromDescricao(tipoResidenciaNovoEnd));
-            }
-            enderecoNovoEnd.setTipoLogradouro(TipoLogradouro.fromDescricao(tipoLogradouroNovoEnd));
-            enderecoNovoEnd.setTipoEndereco(TipoEndereco.fromDescricao(tipoEnderecoNovoEnd));
-
-            Pais paisNovoEnd = new Pais();
-            paisNovoEnd.setNome(nomePaisNovoEnd);
-
-            Estado estadoNovoEnd = new Estado();
-            estadoNovoEnd.setNome(nomeEstadoNovoEnd);
-            estadoNovoEnd.setPais(paisNovoEnd);
-
-            Cidade cidadeNovoEnd = new Cidade();
-            cidadeNovoEnd.setNome(nomeCidadeNovoEnd);
-            cidadeNovoEnd.setEstado(estadoNovoEnd);
-            enderecoNovoEnd.setCidade(cidadeNovoEnd);
 
             Endereco enderecoNovo = new Endereco();
             enderecoNovo.setLogradouro(logradouroNovoEnd);
             enderecoNovo.setNumero(numeroNovoEnd);
             enderecoNovo.setBairro(bairroNovoEnd);
             enderecoNovo.setCep(cepNovoEnd);
-            enderecoNovo.setCidade(cidadeNovoEnd);
             enderecoNovo.setObservacao(observacaoNovoEnd);
-            enderecoNovo.setTipoResidencia(TipoResidencia.fromDescricao(tipoResidenciaNovoEnd));
-            enderecoNovo.setTipoLogradouro(TipoLogradouro.fromDescricao(tipoLogradouroNovoEnd));
-            enderecoNovo.setTipoEndereco(TipoEndereco.fromDescricao(tipoEnderecoNovoEnd));
 
-            System.out.println("Endereco Novo: " + enderecoNovoEnd);
-            System.out.println("02 idCliente armazenado na sessão: " + cliente.getId());
+            // Validação e set dos Tipos de Entidade (Residência, Logradouro, Endereço)
+            if (tipoResidenciaNovoEnd == null || tipoResidenciaNovoEnd.isEmpty()) {
+                throw new IllegalArgumentException("Nenhum tipo de residência selecionado.");
+            } else {
+                enderecoNovo.setTipoResidencia(TipoResidencia.fromDescricao(tipoResidenciaNovoEnd));
+            }
+            if (tipoLogradouroNovoEnd == null || tipoLogradouroNovoEnd.isEmpty()) {
+                throw new IllegalArgumentException("Nenhum tipo de logradouro selecionado.");
+            } else {
+                enderecoNovo.setTipoLogradouro(TipoLogradouro.fromDescricao(tipoLogradouroNovoEnd));
+            }
 
-            cliente.setEndereco(enderecoNovoEnd);
+            if (tipoEnderecoNovoEnd == null || tipoEnderecoNovoEnd.isEmpty()) {
+                throw new IllegalArgumentException("Nenhum tipo de endereço selecionado.");
+            } else {
+                enderecoNovo.setTipoEndereco(TipoEndereco.fromDescricao(tipoEnderecoNovoEnd));
+            }
 
+            // População de País, Estado e Cidade no objeto Endereco
+            Pais paisNovoEnd = new Pais();
+            paisNovoEnd.setNome(nomePaisNovoEnd);
+
+            Estado estadoNovoEnd = new Estado();
+            estadoNovoEnd.setNome(nomeEstadoNovoEnd);
+            estadoNovoEnd.setPais(paisNovoEnd); // Certifique-se de associar o país ao estado
+
+            Cidade cidadeNovoEnd = new Cidade();
+            cidadeNovoEnd.setNome(nomeCidadeNovoEnd);
+            cidadeNovoEnd.setEstado(estadoNovoEnd); // Certifique-se de associar o estado à cidade
+            enderecoNovo.setCidade(cidadeNovoEnd);
+
+            // --- PONTO CRÍTICO: Associar o Endereço ao ID do Cliente da Sessão ---
+            enderecoNovo.setIdCliente(clienteId);
+
+            System.out.println("DEBUG SALVAR ENDEREÇO: Endereço final pronto para salvar: " + enderecoNovo);
+            System.out.println("DEBUG SALVAR ENDEREÇO: ID do Cliente associado ao Endereço: " + enderecoNovo.getIdCliente());
+
+            // Instancia a fachada e salva o novo endereço
             IFachada fachada = new Fachada();
-            System.out.println("03 idCliente armazenado na sessão: " + cliente.getId());
-            String msgNovoEnd = fachada.salvarEndereco(enderecoNovoEnd);
-            System.out.println("04 idCliente armazenado na sessão: " + cliente.getId());
+            String msgNovoEnd = fachada.adicionarEnderecoParaClienteExistente(enderecoNovo);
+            System.out.println("DEBUG SALVAR ENDEREÇO: Resultado do salvar pela fachada: " + msgNovoEnd);
 
-            System.out.println("Resultado do salvar (Res): " + msgNovoEnd);
-            response.sendRedirect("consultarEndereco.jsp");
+            // --- Lógica de redirecionamento condicional ATUALIZADA ---
+            if ("finalizarCompra".equals(redirectPage)) {
+                // Se a origem do fluxo for "cobranca", retorna para a tela de cobrança
+                if ("cobranca".equals(origemFluxo)) {
+                    response.sendRedirect("servlet?action=enderecoCobrancaCompra");
+                } else {
+                    // Caso contrário (ex: origem "entrega" ou não especificada), retorna para a tela de entrega
+                    response.sendRedirect("servlet?action=enderecoEntregaCompra");
+                }
+            } else if ("consultarEndereco".equals(redirectPage)) {
+                // Se veio da tela de gerenciamento de endereços, volta para lá
+                response.sendRedirect("servlet?action=consultarEndereco");
+            } else {
+                // Outros casos de redirecionamento genérico
+                response.sendRedirect(redirectPage + ".jsp");
+            }
 
         } catch (Exception e) {
-            throw new ServletException("Erro ao salvar endereço", e);
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Erro ao salvar endereço: " + e.getMessage());
+
+            // Em caso de erro, repassa os parâmetros para o JSP para manter o contexto
+            String retornoUrl = "adicionarNovoEndereco.jsp?redirect=" + (redirectPage != null ? redirectPage : "");
+            if (tipoEnderecoPredefinido != null && !tipoEnderecoPredefinido.isEmpty()) {
+                retornoUrl += "&tipoEnderecoPredefinido=" + tipoEnderecoPredefinido;
+            }
+            // Inclui o modoEdicao para garantir que o JSP se comporte corretamente em caso de erro
+            boolean modoEdicaoCompleta = "true".equalsIgnoreCase(request.getParameter("modoEdicao"));
+            if (modoEdicaoCompleta) {
+                retornoUrl += "&modoEdicao=true";
+            }
+            // NOVO: Repassar também o parametro 'origemFluxo' em caso de erro
+            if (origemFluxo != null && !origemFluxo.isEmpty()) {
+                retornoUrl += "&origemFluxo=" + origemFluxo;
+            }
+
+            request.getRequestDispatcher(retornoUrl).forward(request, response);
         }
     }
 
@@ -2343,6 +2382,40 @@ public class CtrlServlet extends HttpServlet {
     }
 
     private void enderecoEntregaCompra(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HttpSession session = request.getSession();
+        Integer clienteId = (Integer) session.getAttribute("clienteId");
+
+        if (clienteId == null) {
+            // Redireciona para login se não houver cliente na sessão
+            response.sendRedirect("login.jsp?mensagemErro=Sessão de cliente inválida. Faça login novamente.");
+            return;
+        }
+
+        try {
+            // **GARANTINDO A ATUALIZAÇÃO:**
+            // Sempre consulte o DAO para obter a lista mais recente de endereços do cliente
+            EnderecoDAO enderecoDAO = new EnderecoDAO();
+            List<Endereco> todosEnderecosDoCliente = enderecoDAO.consultarPorCliente(clienteId);
+            List<Endereco> enderecosEntrega = new ArrayList<>();
+
+            if (todosEnderecosDoCliente != null) {
+                for (Endereco endereco : todosEnderecosDoCliente) {
+                    // Filtra apenas os endereços de entrega
+                    // Certifique-se de que getTipoEndereco() não retorne null antes de chamar getDescricao()
+                    if (endereco.getTipoEndereco() != null && endereco.getTipoEndereco().getDescricao().equalsIgnoreCase("Entrega")) {
+                        enderecosEntrega.add(endereco);
+                    }
+                }
+            }
+            // Coloca a lista filtrada de endereços de entrega na requisição
+            request.setAttribute("enderecosEntrega", enderecosEntrega);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            request.setAttribute("mensagemErro", "Erro ao carregar endereços de entrega para seleção: " + e.getMessage());
+        }
+
+        // Encaminha para o JSP que exibe os endereços de entrega para seleção
         request.getRequestDispatcher("exibirEndEntCompra.jsp").forward(request, response);
     }
 

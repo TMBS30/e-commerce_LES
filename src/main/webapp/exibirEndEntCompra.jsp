@@ -49,37 +49,62 @@
 
         <%
             Integer clienteId = (Integer) session.getAttribute("clienteId");
-            List<Endereco> enderecosEntrega = new ArrayList<>();
+            if (clienteId == null) {
+                response.sendRedirect("login.jsp?mensagemErro=Sessão de cliente inválida. Faça login novamente.");
+                return;
+            }
 
-            if (clienteId != null) {
-                EnderecoDAO enderecoDAO = new EnderecoDAO();
-                List<Endereco> todosEnderecos = enderecoDAO.consultarPorCliente(clienteId);
-                if (todosEnderecos != null) {
-                    for (Endereco endereco : todosEnderecos) {
-                        if (endereco.getTipoEndereco().getDescricao().equalsIgnoreCase("Entrega")) {
-                            enderecosEntrega.add(endereco);
+            List<Endereco> enderecosEntrega = (List<Endereco>) request.getAttribute("enderecosEntrega");
+
+            // Se a lista não veio da requisição (ex: acesso direto ao JSP sem passar pelo Servlet ou erro anterior),
+            // então a carregue do DAO como fallback.
+            if (enderecosEntrega == null) {
+                enderecosEntrega = new ArrayList<>(); // Inicializa para evitar NullPointerException
+                try {
+                    EnderecoDAO enderecoDAO = new EnderecoDAO();
+                    List<Endereco> todosEnderecos = enderecoDAO.consultarPorCliente(clienteId);
+                    if (todosEnderecos != null) {
+                        for (Endereco endereco : todosEnderecos) {
+                            if (endereco.getTipoEndereco() != null && endereco.getTipoEndereco().getDescricao().equalsIgnoreCase("Entrega")) {
+                                enderecosEntrega.add(endereco);
+                            }
                         }
                     }
+                } catch (Exception e) {
+                    System.err.println("Erro ao carregar endereços do cliente como fallback: " + e.getMessage());
+                    // Opcional: request.setAttribute("mensagemErro", "Erro ao carregar endereços: " + e.getMessage());
                 }
             }
+
+            // --- DEPURACAO NO JSP: Verifique o tamanho da lista e os IDs dos endereços aqui ---
+            System.out.println("DEBUG JSP: Total de endereços de ENTREGA na lista: " + enderecosEntrega.size());
+            for (Endereco debugEndereco : enderecosEntrega) {
+                System.out.println("DEBUG JSP: Endereço na lista - ID: " + debugEndereco.getId() +
+                                   ", Tipo: " + (debugEndereco.getTipoEndereco() != null ? debugEndereco.getTipoEndereco().getDescricao() : "NULL_TIPO") +
+                                   ", Logradouro: " + debugEndereco.getLogradouro());
+            }
+            // --- FIM DA DEPURACAO ---
 
             if (enderecosEntrega.isEmpty()) {
         %>
             <p class="no-enderecos">Nenhum endereco de entrega cadastrado.</p>
             <div class="buttons-container">
                 <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                <button type="button" class="add-end-button" onclick="window.location.href='enderecoCadastro.jsp?tipo=entrega&redirect=finalizarCompra'">Adicionar Endereco de Entrega</button>
+                <button type="button" class="link-adicionar" onclick="window.location.href='adicionarNovoEndereco.jsp?redirect=finalizarCompra&tipoEnderecoPredefinido=Entrega&origemFluxo=entrega'">Adicionar Endereco de Entrega</button>
             </div>
         <%
             } else {
+                // Simplificação: Initialize enderecoSelecionadoId com um valor padrão seguro
                 Endereco enderecoSelecionadoSessao = (Endereco) session.getAttribute("enderecoSelecionado");
                 int enderecoSelecionadoId = (enderecoSelecionadoSessao != null) ? enderecoSelecionadoSessao.getId() : -1;
 
+                // Percorre e exibe CADA endereço na lista
                 for (Endereco endereco : enderecosEntrega) {
         %>
             <div class="endereco-container">
                 <h3>Endereco de Entrega</h3>
                 <div class="radio-container">
+                    <%-- Certifique-se de que o ID do endereço é único para cada radio button --%>
                     <input type="radio" id="endereco_<%= endereco.getId() %>" name="idEnderecoEntregaSelecionado" value="<%= endereco.getId() %>" <%= (endereco.getId() == enderecoSelecionadoId ? "checked" : "") %>>
                     <label for="endereco_<%= endereco.getId() %>">Selecionar este endereco</label>
                 </div>
@@ -93,7 +118,7 @@
                 </div>
                 <div class="input-container">
                     <label>Tipo Logradouro:</label>
-                    <input type="text" value="<%= endereco.getTipoLogradouro() %>" disabled>
+                    <input type="text" value="<%= endereco.getTipoLogradouro().getDescricao() %>" disabled>
                 </div>
                 <div class="input-container">
                     <label>Numero:</label>
@@ -113,7 +138,7 @@
                 </div>
                 <div class="input-container">
                     <label>Tipo Residencia:</label>
-                    <input type="text" value="<%= endereco.getTipoResidencia() %>" disabled>
+                    <input type="text" value="<%= endereco.getTipoResidencia().getDescricao() %>" disabled>
                 </div>
                 <div class="input-container">
                     <label>Observacao:</label>
@@ -121,15 +146,15 @@
                 </div>
             </div>
         <%
-                }
+                } // Fim do loop for
         %>
             <div class="buttons-container">
                 <button type="submit" class="salvar-button">Salvar Endereco de Entrega</button>
                 <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                <button type="button" class="link-adicionar" onclick="window.location.href='enderecoCadastro.jsp?tipo=entrega&redirect=finalizarCompra'">Adicionar Novo Endereco de Entrega</button>
+                <button type="button" class="link-adicionar" onclick="window.location.href='adicionarNovoEndereco.jsp?redirect=finalizarCompra&tipoEnderecoPredefinido=Entrega&origemFluxo=entrega'">Adicionar Endereco de Entrega</button>
             </div>
         <%
-            }
+            } // Fim do if (enderecosEntrega.isEmpty())
         %>
     </form>
     </div>

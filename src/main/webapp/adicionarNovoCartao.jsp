@@ -29,32 +29,34 @@
 
     <%
          Integer clienteId = (Integer) session.getAttribute("clienteId");
-         Cliente cliente = null;
-         if (clienteId != null) {
-             ClienteDAO clienteDAO = new ClienteDAO();
-             cliente = clienteDAO.consultarPorId(clienteId);
-         }
-     System.out.println("ID do Cliente na sessao: " + clienteId); // Valide se o ID aparece
+         // Cliente cliente = null; // Não precisa consultar o cliente aqui se o ID já vem da sessão
+         // if (clienteId != null) {
+         //     ClienteDAO clienteDAO = new ClienteDAO();
+         //     cliente = clienteDAO.consultarPorId(clienteId);
+         // }
+     System.out.println("ID do Cliente na sessao (adicionarNovoCartao.jsp): " + clienteId); // Valide se o ID aparece
+
+     String redirectPage = request.getParameter("redirect");
+     if (redirectPage == null || redirectPage.isEmpty()) {
+         redirectPage = "consultarCartao";
+     }
+
     %>
 
+    <%-- Removido o primeiro bloco de input hidden idCliente fora do form --%>
     <%
-        if (clienteId != null) {
+        if (clienteId == null) {
     %>
-        <input type="hidden" name="idCliente" value="<%= clienteId %>">
-    <%
-        } else {
-    %>
-        <p>Erro: Cliente nao encontrado.</p>
+        <p>Erro: Cliente nao encontrado na sessao. Por favor, faca login novamente.</p>
     <%
         }
     %>
 
 
-    <h2>Adicionar Novo Cartao</h2> <!-- Título da tela -->
-
-    <form class="form" action="servlet" method="POST">
-        <input type="hidden" name="idCliente" value="<%= session.getAttribute("clienteId") %>">
+    <h2>Adicionar Novo Cartao</h2> <form class="form" action="servlet" method="POST">
+        <%-- REMOVIDO: <input type="hidden" name="idCliente" value="<%= session.getAttribute("clienteId") %>"> --%>
         <input type="hidden" name="action" value="salvarNovoCartao">
+        <input type="hidden" name="redirect" value="<%= redirectPage %>">
 
         <div class="input-container_nomeCartao">
             <label for="nomeTitular_novoCartao">*Nome do Titular</label>
@@ -80,13 +82,12 @@
             </select>
         </div>
 
-        
         <div class="container-lado-a-lado">
             <div class="input-container_codCartao">
                 <label for="codSeguranca_novoCartao">*CVV</label>
                 <input type="text" name="codSeguranca_novoCartao" id="codSeguranca_novoCartao" required />
             </div>
-    
+
             <div class="input-container_dataVencimento">
                 <label for="dataVencimento_novoCartao">*Data Vencimento</label>
                 <input type="text" name="dataVencimento_novoCartao" id="dataVencimento_novoCartao" required />
@@ -95,31 +96,31 @@
                 <label for="preferencialCartao_novoCartao">Preferencial?</label>
                 <input type="checkbox" name="preferencialCartao_novoCartao" id="preferencialCartao_novoCartao" value="true"/>
             </div>
-    
+
             <div class="buttons-container">
                 <button type="submit">Salvar</button>
             </div>
             <div class="buttons-container">
-                <button class="voltar-button" onclick="window.location.href='consultarCartao.jsp'">Voltar</button>
+                <button type="button" class="voltar-button" onclick="window.location.href='<%= redirectPage %>.jsp'">Voltar</button>
             </div>
         </div>
 
 
         <script>
-    document.getElementById('dataVencimento_novoCartao').addEventListener('input', function (e) {
-        var value = e.target.value;
-        value = value.replace(/\D/g, '');
-        if (value.length <= 2) {
-            e.target.value = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
-        } else {
-            e.target.value = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2');
-        }
-    });
-    document.querySelector('form').addEventListener('submit', function (e) {
-        var dataVencimentoInput = document.getElementById('dataVencimento_novoCartao');
-        var dataVencimentoValue = dataVencimentoInput.value;
-        dataVencimentoInput.value = dataVencimentoValue.replace('/', '');
-    });
+            document.getElementById('dataVencimento_novoCartao').addEventListener('input', function (e) {
+                var value = e.target.value;
+                value = value.replace(/\D/g, '');
+                if (value.length <= 2) {
+                    e.target.value = value.replace(/(\d{2})(\d{0,2})/, '$1/$2');
+                } else {
+                    e.target.value = value.replace(/(\d{2})(\d{2})(\d{0,4})/, '$1/$2');
+                }
+            });
+            document.querySelector('form').addEventListener('submit', function (e) {
+                var dataVencimentoInput = document.getElementById('dataVencimento_novoCartao');
+                var dataVencimentoValue = dataVencimentoInput.value;
+                dataVencimentoInput.value = dataVencimentoValue.replace('/', '');
+            });
         </script>
     </form>
 </main>

@@ -143,7 +143,7 @@
             <p class="no-enderecos">Nenhum endereco de cobranca cadastrado.</p>
             <div class="buttons-container">
                 <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                <button type="button" class="add-end-button" onclick="window.location.href='enderecoCadastro.jsp?tipo=cobranca&redirect=finalizarCompra'">Adicionar Endereco de Cobranca</button>
+                <button type="button" class="link-adicionar" onclick="window.location.href='adicionarNovoEndereco.jsp?redirect=finalizarCompra&tipoEnderecoPredefinido=Cobranca&origemFluxo=cobranca'">Adicionar Endereco de Cobranca</button>
             </div>
         <%
             } else {
@@ -201,7 +201,7 @@
             <div class="buttons-container">
                 <button type="submit" class="salvar-button">Salvar Endereco de Cobranca</button>
                 <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                <button type="button" class="link-adicionar" onclick="window.location.href='enderecoCadastro.jsp?tipo=cobranca&redirect=finalizarCompra'">Adicionar Novo Endereco de Cobranca</button>
+                <button type="button" class="link-adicionar" onclick="window.location.href='adicionarNovoEndereco.jsp?redirect=finalizarCompra&tipoEnderecoPredefinido=Cobranca&origemFluxo=cobranca'">Adicionar Endereco de Cobranca</button>
             </div>
         <%
             }

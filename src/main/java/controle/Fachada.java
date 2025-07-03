@@ -57,28 +57,27 @@ public class Fachada implements IFachada {
         daos.put(Livro.class.getName(), new LivroDAO());
     }
 
-    public String salvarCartao(Cartao cartao) throws Exception{
+    public String salvarCartao(Cartao cartao, Integer clienteId) throws Exception{ // <-- ADICIONADO clienteId AQUI
         String msg = executarValidacoesCartao(cartao);
         System.out.println("01 Mensagem de validação: " + msg);
 
         if (msg == null) {
             CartaoDAO cartaoDAO = new CartaoDAO();
-            ClienteDAO clienteDAO = new ClienteDAO();
+            // ClienteDAO clienteDAO = new ClienteDAO(); // <-- NÃO PRECISA MAIS DE ClienteDAO AQUI
             Connection conn = Conexao.createConnectionToMySQL();
 
-
             try {
-                Cliente cliente = clienteDAO.buscarUltimoCliente();
-                System.out.println("\n01 Fachada ID (salvarCartao) Cliente: " + cliente + "\n");
+                // REMOVIDO: Cliente cliente = clienteDAO.buscarUltimoCliente();
+                // System.out.println("\n01 Fachada ID (salvarCartao) Cliente: " + cliente + "\n");
 
-                if (cliente != null) {
-                    cartao.setIdCliente(cliente.getId());
+                if (clienteId != null) { // <-- AGORA VOCÊ USA O clienteId PASSADO POR PARÂMETRO
+                    cartao.setIdCliente(clienteId); // <-- ASSOCIA O ID CORRETO AO CARTÃO
                     System.out.println("ID Cliente associado ao cartao: " + cartao.getIdCliente());
                     String resultado = cartaoDAO.salvar(cartao, conn);
                     System.out.println("Resultado do salvar: " + resultado);
                     return resultado;
                 } else {
-                    return "Erro: Nenhum cliente encontrado para associar ao cartao.";
+                    return "Erro: ID do cliente não fornecido para associar ao cartao."; // Melhor mensagem de erro
                 }
             } finally {
                 //if (conn != null) conn.close();
@@ -259,6 +258,48 @@ public class Fachada implements IFachada {
                 if(conn != null)conn.close();
             }
         } else {
+            return msg;
+        }
+    }
+
+    public String adicionarEnderecoParaClienteExistente(Endereco endereco) throws Exception {
+        // Verifica se o endereço é válido (reutiliza as validações)
+        String msg = executarValidacoesEndereco(endereco);
+        System.out.println("01 Mensagem de validação (adicionarEnderecoParaClienteExistente): " + msg); // Mude o log
+
+        if (msg == null) {
+            EnderecoDAO enderecoDAO = new EnderecoDAO();
+
+            // VALIDAÇÃO CRÍTICA: Garanta que o ID do cliente já está presente no objeto Endereco
+            if (false || (endereco.getIdCliente() <= 0)) {
+                return "Erro: ID do cliente não definido no endereço. O cliente deve estar logado.";
+            }
+
+            System.out.println("DEBUG FACHADA: Adicionando endereco para cliente EXISTENTE ID: " + endereco.getIdCliente());
+
+            Connection conn = null; // Declare a conexão fora do try para garantir o finally
+            try {
+                conn = Conexao.createConnectionToMySQL(); // Abre a conexão aqui
+
+                // Não há necessidade de buscar o cliente aqui, o ID já está em 'endereco.getIdCliente()'
+                String resultado = enderecoDAO.salvar(endereco, conn); // Reutiliza seu método salvar do DAO, passando a conexão
+                System.out.println("Resultado do salvar (via DAO em adicionarEnderecoParaClienteExistente): " + resultado);
+                return resultado;
+
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return "Erro SQL ao adicionar endereço para cliente existente: " + e.getMessage();
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.close();
+                    } catch (SQLException e) {
+                        System.err.println("Erro ao fechar a conexão (adicionarEnderecoParaClienteExistente): " + e.getMessage());
+                    }
+                }
+            }
+        } else {
+            System.out.println("01 Mensagem de validação (adicionarEnderecoParaClienteExistente): " + msg);
             return msg;
         }
     }

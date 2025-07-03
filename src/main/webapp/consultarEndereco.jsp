@@ -10,10 +10,7 @@
 
     <!-- Botão Adicionar Endereço no topo -->
     <div class="top-buttons">
-        <form action="servlet" method="post">
-            <input type="hidden" name="action" value="salvarNovoEnderecoForm" />
-            <button type="submit" class="add-button">Adicionar Endereco +</button>
-        </form>
+        <button type="button" class="add-button" onclick="window.location.href='adicionarNovoEndereco.jsp?redirect=consultarEndereco&modoEdicao=true'">Adicionar Endereco +</button>
     </div>
 
     <%

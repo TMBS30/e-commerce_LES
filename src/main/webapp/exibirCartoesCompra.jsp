@@ -19,11 +19,11 @@
         <div class="menu-fixo">
             <a href="#" class="chatbot">
                 <p class="texto-chatbot">ChatBot</p>
-                <img class="icone-chatbot"src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
+                <img class="icone-chatbot" src="Imagens/Icone - ChatBot.svg" alt="Icone ChatBot">
             </a>
 
             <div class="input-pesquisa_livro">
-                <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
+                <input class="input-pesquisa" type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
             </div>
 
             <a href="#" class="link-categorias">
@@ -63,7 +63,7 @@
                     <p class="no-cartoes">Nenhum cartao cadastrado.</p>
                     <div class="buttons-container">
                         <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                        <a href="cartaoCadastro.jsp?redirect=finalizarCompra" class="link-adicionar">Adicionar Novo Cartao</a>
+                        <a href="adicionarNovoCartao.jsp?redirect=finalizarCompra&origemFluxo=compraCartao" class="link-adicionar">Adicionar Novo Cartao</a>
                     </div>
                 <%
                     } else {
@@ -105,7 +105,7 @@
                     <div class="buttons-container">
                         <button type="submit" class="salvar-button">Salvar Cartoes Selecionados</button>
                         <button type="button" class="voltar-button" onclick="window.location.href='finalizarCompra.jsp'">Voltar</button>
-                        <a href="cartaoCadastro.jsp?redirect=finalizarCompra" class="link-adicionar">Adicionar Novo Cartao</a>
+                        <a href="adicionarNovoCartao.jsp?redirect=finalizarCompra&origemFluxo=compraCartao" class="link-adicionar">Adicionar Novo Cartao</a>
                     </div>
                 <%
                     }

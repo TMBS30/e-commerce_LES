@@ -147,7 +147,8 @@
                         Endereco enderecoEntrega = (Endereco) session.getAttribute("enderecoSelecionado");
                         if (enderecoEntrega != null) {
                     %>
-                        <p><%= enderecoEntrega.getLogradouro() %>, <%= enderecoEntrega.getNumero() %> - <%= enderecoEntrega.getCidade() %></p>
+                       <p><%= enderecoEntrega.getLogradouro() %>, <%= enderecoEntrega.getNumero() %> - <%= enderecoEntrega.getCidade().getNome() %></p>
+
                         <input type="hidden" name="idEnderecoEntrega" value="<%= enderecoEntrega.getId() %>">
                     <%
                         } else {
@@ -163,7 +164,7 @@
                         Endereco enderecoCobranca = (Endereco) session.getAttribute("enderecoCobrancaSelecionado");
                         if (enderecoCobranca != null) {
                     %>
-                        <p><%= enderecoCobranca.getLogradouro() %>, <%= enderecoCobranca.getNumero() %> - <%= enderecoCobranca.getCidade() %></p>
+                        <p><%= enderecoCobranca.getLogradouro() %>, <%= enderecoCobranca.getNumero() %> - <%= enderecoCobranca.getCidade().getNome() %></p>
                         <input type="hidden" name="idEnderecoCobranca" value="<%= enderecoCobranca.getId() %>">
                     <%
                         } else {
@@ -180,7 +181,7 @@
                         if (cartoesSelecionados != null && !cartoesSelecionados.isEmpty()) {
                             for (Cartao cartao : cartoesSelecionados) {
                     %>
-                        <p>Cartão final <%= cartao.getNumero().substring(cartao.getNumero().length() - 4) %> - <%= cartao.getBandeiraCartao().getDescricao() %></p>
+                        <p>Cartao final <%= cartao.getNumero().substring(cartao.getNumero().length() - 4) %> - <%= cartao.getBandeiraCartao().getDescricao() %></p>
                     <%
                             }
                         } else {

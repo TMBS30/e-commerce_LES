@@ -1,3 +1,219 @@
-body{
+@import url('https://fonts.googleapis.com/css2?family=Montserrat+Alternates:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
 
+/* Reset Básico */
+*{
+    margin : 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Montserrat Alternates", sans-serif;
+
+}
+
+body{
+    background-color: white;
+}
+
+/* Estilos do Cabeçalho */
+header{
+    background-color: #4856ED;
+    height: 120px;
+    display: flex;
+    align-items: center; /* Centraliza verticalmente */
+}
+
+header .logo-link {
+    display: flex;
+    align-items: center; /* Alinha verticalmente o texto e a imagem */
+    text-decoration: none; /* Remove o sublinhado padrão do link */
+    color: inherit; /* Faz com que a cor do texto herde a cor do pai */
+}
+
+h1{
+    /* Removido border: 1px solid #4856ED; pois pode não ser o objetivo */
+    margin-bottom: 47px;
+    color: #FFF;
+    font-size: 48px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    margin: 45px 50px 45px;
+    width: 800px;
+    margin-right: 0px;
+}
+
+/* Estilos do Menu Fixo */
+.menu-fixo{
+    display: flex;
+    gap: 60px;
+    flex-direction: row;
+    text-decoration: none;
+    align-items: center;
+    margin-top: 46px;
+    justify-content: flex-end;
+    margin-right: 110px;
+}
+
+.chatbot{
+    display: flex;
+    gap: 1px;
+    flex-direction: row;
+    text-decoration: none;
+}
+
+.texto-chatbot{
+    text-decoration: none;
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-chatbot{
+    width: 22px;
+    height: 20px;
+    flex-shrink: 0;
+    fill: #1F1F1F;
+}
+
+.input-pesquisa{
+    width: 352px;
+    height: 50px;
+    flex-shrink: 0;
+    border-radius: 20px;
+    border-width: 3px;
+    border-color:  #1F1F1F;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+    padding-left: 25px;
+}
+
+.link-categorias{
+    text-decoration: none;
+}
+
+.categorias{
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.link-pedidos{
+    text-decoration: none;
+}
+
+.pedidos{
+    color: #1F1F1F;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 600;
+    line-height: normal;
+}
+
+.icone-carrinho{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+.icone-user{
+    width: 35px;
+    height: 35px;
+    flex-shrink: 0;
+    aspect-ratio: 1/1;
+    fill: #1F1F1F;
+}
+
+/* Estilos Específicos do Formulário adicionarNovoEndereco.jsp */
+.container{
+    margin: 30px 10% 5px 10%; /* Ajuste a margem conforme necessário para o conteúdo */
+}
+
+.form_box {
+    border: 1px solid #ccc;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.title3 {
+    margin-top: 20px;
+    margin-bottom: 15px;
+    color: #555;
+}
+
+.container-input {
+    margin-bottom: 15px;
+}
+
+.container-input label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #444;
+}
+
+.container-input input[type="text"],
+.container-input select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.input-disabled {
+    background-color: #f0f0f0;
+    cursor: not-allowed;
+}
+
+.buttons-container {
+    display: flex;
+    justify-content: flex-end; /* Alinha os botões à direita */
+    gap: 10px;
+    margin-top: 30px;
+}
+
+.botao-voltar, .botao-proximo-link {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    text-decoration: none; /* Para o botão que é link */
+    display: inline-block; /* Para o botão que é link */
+    text-align: center; /* Para o botão que é link */
+}
+
+.botao-voltar {
+    background-color: #f44336;
+    color: white;
+}
+
+.botao-voltar:hover {
+    background-color: #d32f2f;
+}
+
+.botao-proximo-link {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.botao-proximo-link:hover {
+    background-color: #45a049;
 }
