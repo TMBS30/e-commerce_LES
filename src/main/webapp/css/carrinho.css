@@ -326,14 +326,19 @@ select{
     cursor: pointer;
     font-size: 16px;
     width: 100%;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
 }
 
 .finalizar-compra-btn:hover {
     background-color: #3742D6;
 }
 
+.finalizar-compra-btn.disabled-opaque {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 
-/* Estilos para o container de quantidade (já existem, ajuste se necessário) */
 .quantidade-container {
     display: flex;
     align-items: center;

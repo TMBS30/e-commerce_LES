@@ -19,10 +19,7 @@ public class CleanupListener implements ServletContextListener {
         scheduler = Executors.newSingleThreadScheduledExecutor();
         CarrinhoDAO carrinhoDAO = new CarrinhoDAO();
 
-        // Agendar a tarefa para executar a cada minuto (você pode ajustar este intervalo)
-        //scheduler.scheduleAtFixedRate(carrinhoDAO::excluirCarrinhosInativos, 1, 1, TimeUnit.MINUTES);
-        // Note: Para um ambiente de produção, um intervalo maior (ex: a cada 5 ou 10 minutos) pode ser mais apropriado.
-    }
+         }
 
     @Override
     public void contextDestroyed(ServletContextEvent event) {

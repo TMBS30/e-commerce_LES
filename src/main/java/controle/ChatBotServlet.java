@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.sql.Connection; // >>> NOVO: Importar Connection
-import java.sql.SQLException; // >>> NOVO: Importar SQLException
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,16 +20,16 @@ import java.lang.Math;
 
 import dao.LivroDAO;
 import dao.ItemDAO;
-import dao.EstoqueAtualDAO; // >>> NOVO: Importar EstoqueAtualDAO
+import dao.EstoqueAtualDAO;
 import dominio.Livro;
 import dominio.Autor;
 import dominio.Categoria;
-import dominio.EstoqueAtual; // >>> NOVO: Importar EstoqueAtual
+import dominio.EstoqueAtual;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import util.GeminiApiClient;
-import util.Conexao; // >>> NOVO: Importar sua classe de Conexao
+import util.Conexao;
 
 @WebServlet("/chatBot")
 public class ChatBotServlet extends HttpServlet {
@@ -71,18 +71,17 @@ public class ChatBotServlet extends HttpServlet {
 
         LivroDAO livroDAO = new LivroDAO();
         ItemDAO itemDAO = new ItemDAO();
-        EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO(); // >>> NOVO: Instância do DAO de Estoque
+        EstoqueAtualDAO estoqueAtualDAO = new EstoqueAtualDAO();
         String botResponse = "";
 
-        Connection conn = null; // >>> NOVO: Declara a conexão aqui para ser usada no try-catch-finally
+        Connection conn = null;
         try {
-            conn = Conexao.createConnectionToMySQL(); // >>> NOVO: Abre a conexão UMA VEZ
+            conn = Conexao.createConnectionToMySQL();
             if (conn == null) {
                 System.err.println("Erro: Conexão nula ao tentar conectar ao banco de dados no ChatBotServlet.");
                 throw new SQLException("Erro ao conectar ao banco de dados: Conexão nula.");
             }
 
-            // *** PROMPT PARA O GEMINI: EXTRATOR DE FILTROS E RECOMENDADOR ***
             String promptToGemini =
                     "Você é um assistente especializado em livros para a PageStation, o PageBot. " +
                             "Sua função principal é ajudar o usuário a encontrar livros no catálogo, aceitando múltiplos filtros. " +
@@ -189,37 +188,36 @@ public class ChatBotServlet extends HttpServlet {
 
                     List<Livro> livrosEncontrados = new ArrayList<>();
 
-                    // PRIMEIRA TENTATIVA: Busca com filtros extraídos pelo Gemini
+
                     if (filtrosParaDAO != null && !filtrosParaDAO.isEmpty()) {
                         System.out.println("DEBUG: Tentando buscar livros no banco com filtros extraídos: " + filtrosParaDAO);
                         livrosEncontrados = livroDAO.consultarPorFiltros(filtrosParaDAO);
                     }
 
-                    // SEGUNDA TENTATIVA: Se a primeira falhou e há um tema/palavra-chave geral
                     if (livrosEncontrados.isEmpty() && temaBuscado != null && !temaBuscado.trim().isEmpty()) {
                         System.out.println("DEBUG: Busca por filtros falhou. Tentando buscar por tema_buscado: '" + temaBuscado + "' no título/sinopse.");
                         livrosEncontrados = livroDAO.consultarPorKeywords(temaBuscado);
                     }
-                    // Opcional: Se ainda vazio, tentar com a mensagem original do usuário
+
                     if (livrosEncontrados.isEmpty() && (filtrosParaDAO == null || filtrosParaDAO.isEmpty()) && (temaBuscado == null || temaBuscado.trim().isEmpty())) {
                         System.out.println("DEBUG: Nenhuma busca específica retornou resultados. Tentando buscar por palavras-chave da mensagem original do usuário: '" + userMessage + "'");
                         livrosEncontrados = livroDAO.consultarPorKeywords(userMessage);
                     }
 
-                    // >>> NOVO: Lógica de Filtragem por Estoque para livros encontrados nas buscas diretas <<<
+
                     List<Livro> livrosComEstoqueDisponivel = new ArrayList<>();
                     for (Livro livro : livrosEncontrados) {
-                        EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn); // Passa a conexão
+                        EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn);
                         if (estoque != null && estoque.getQuantidadeAtual() > 0) {
                             livrosComEstoqueDisponivel.add(livro);
                         }
                     }
-                    livrosEncontrados = livrosComEstoqueDisponivel; // Atualiza a lista para apenas os com estoque
+                    livrosEncontrados = livrosComEstoqueDisponivel;
 
                     if (!livrosEncontrados.isEmpty()) {
                         StringBuilder sb = new StringBuilder("Que ótima escolha! Encontrei o(s) seguinte(s) livro(s) no nosso catálogo que correspondem aos seus critérios:\n");
                         for (Livro livro : livrosEncontrados) {
-                            // Note: itemDAO.buscarMenorPrecoPorLivroId abre e fecha a própria conexão
+
                             Double preco = itemDAO.buscarMenorPrecoPorLivroId(livro.getId());
                             String autoresStr = livro.getAutores().stream()
                                     .map(Autor::getNome)
@@ -239,24 +237,23 @@ public class ChatBotServlet extends HttpServlet {
                         botResponse = justificativaGemini + "\n" + sb.toString();
 
                     } else {
-                        // NOVA TENTATIVA: Nada encontrado pelas buscas diretas. Tentar busca semântica com Gemini.
+
                         System.out.println("DEBUG: Nenhuma busca direta retornou resultados. Tentando busca semântica com Gemini.");
 
-                        List<Livro> allActiveBooks = livroDAO.consultarTodos(); // Obter todos os livros ativos
-                        // >>> NOVO: Filtrar allActiveBooks por estoque antes de enviar ao Gemini <<<
+                        List<Livro> allActiveBooks = livroDAO.consultarTodos();
+
                         List<Livro> allActiveBooksWithStock = new ArrayList<>();
                         for (Livro livro : allActiveBooks) {
-                            EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn); // Passa a conexão
+                            EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livro.getId(), conn);
                             if (estoque != null && estoque.getQuantidadeAtual() > 0) {
                                 allActiveBooksWithStock.add(livro);
                             }
                         }
-                        allActiveBooks = allActiveBooksWithStock; // Atualiza a lista para apenas os com estoque
+                        allActiveBooks = allActiveBooksWithStock;
 
                         if (!allActiveBooks.isEmpty()) {
                             StringBuilder booksForGeminiPrompt = new StringBuilder();
-                            // Limita a sinopse para evitar prompts muito longos para o Gemini
-                            for (Livro livro : allActiveBooks) { // Agora itera sobre livros com estoque
+                            for (Livro livro : allActiveBooks) {
                                 booksForGeminiPrompt.append(livro.getId()).append(" | ")
                                         .append(livro.getTitulo()).append(" | ")
                                         .append(livro.getSinopse() != null ? livro.getSinopse().substring(0, Math.min(livro.getSinopse().length(), 250)) : "Sem sinopse").append(" | ")
@@ -301,26 +298,26 @@ public class ChatBotServlet extends HttpServlet {
 
                                 if (recomendacoes != null && recomendacoes.length() > 0) {
                                     StringBuilder sb = new StringBuilder("Que interessante! Com base na sua busca, encontrei algumas recomendações que podem te interessar:\n");
-                                    // >>> NOVO: Filtrar recomendações do Gemini por estoque <<<
+
                                     List<JSONObject> recomendacoesComEstoque = new ArrayList<>();
                                     for (int i = 0; i < recomendacoes.length(); i++) {
                                         JSONObject recomendacao = recomendacoes.getJSONObject(i);
                                         int livroId = recomendacao.getInt("id_livro");
-                                        EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livroId, conn); // Passa a conexão
+                                        EstoqueAtual estoque = estoqueAtualDAO.consultarPorLivroId(livroId, conn);
                                         if (estoque != null && estoque.getQuantidadeAtual() > 0) {
                                             recomendacoesComEstoque.add(recomendacao);
                                         }
                                     }
 
-                                    if (!recomendacoesComEstoque.isEmpty()) { // Se houver recomendações com estoque
-                                        for (JSONObject recomendacao : recomendacoesComEstoque) { // Agora itera sobre as recomendações com estoque
+                                    if (!recomendacoesComEstoque.isEmpty()) {
+                                        for (JSONObject recomendacao : recomendacoesComEstoque) {
                                             int livroId = recomendacao.getInt("id_livro");
                                             String tituloRecomendado = recomendacao.getString("titulo");
                                             String justificativa = recomendacao.getString("justificativa");
 
-                                            Livro livroRecomendado = livroDAO.consultarPorId(livroId); // Puxa o livro completo
-                                            if (livroRecomendado != null) { // Confere se o livro existe no BD
-                                                // Note: itemDAO.buscarMenorPrecoPorLivroId abre e fecha a própria conexão
+                                            Livro livroRecomendado = livroDAO.consultarPorId(livroId);
+                                            if (livroRecomendado != null) {
+
                                                 Double preco = itemDAO.buscarMenorPrecoPorLivroId(livroRecomendado.getId());
                                                 String autoresStr = livroRecomendado.getAutores().stream()
                                                         .map(Autor::getNome)
@@ -341,10 +338,9 @@ public class ChatBotServlet extends HttpServlet {
                                         sb.append("\nEspero que alguma destas opções seja o que você procura!");
                                         botResponse = sb.toString();
                                     } else {
-                                        // >>> NOVO: Nenhuma recomendação do Gemini tinha estoque. Mensagem de fallback. <<<
-                                        System.out.println("DEBUG: As recomendações semânticas não tinham estoque. Iniciando bate-papo guiado por categorias (fallback).");
-                                        List<String> categories = livroDAO.getAllCategoriesNames(); // Assume que getAllCategoriesNames não precisa de conexão
 
+                                        System.out.println("DEBUG: As recomendações semânticas não tinham estoque. Iniciando bate-papo guiado por categorias (fallback).");
+                                        List<String> categories = livroDAO.getAllCategoriesNames();
                                         String searchTopic = (temaBuscado != null && !temaBuscado.trim().isEmpty() ? temaBuscado : userMessage);
 
                                         String[] fallbackTemplates = {
@@ -370,7 +366,7 @@ public class ChatBotServlet extends HttpServlet {
                                 } else {
                                     // Busca semântica também não retornou recomendações. Iniciar bate-papo guiado por categorias mais fluidamente.
                                     System.out.println("DEBUG: Busca semântica não retornou recomendações. Iniciando bate-papo guiado por categorias.");
-                                    List<String> categories = livroDAO.getAllCategoriesNames(); // Assume que getAllCategoriesNames não precisa de conexão
+                                    List<String> categories = livroDAO.getAllCategoriesNames();
 
                                     String searchTopic = (temaBuscado != null && !temaBuscado.trim().isEmpty() ? temaBuscado : userMessage);
 
@@ -457,7 +453,7 @@ public class ChatBotServlet extends HttpServlet {
                 } else {
                     botResponse = "Desculpe, o PageBot teve dificuldades para entender a resposta do Gemini. Por favor, tente reformular sua pergunta sobre livros.";
                 }
-            } catch (SQLException e) { // >>> NOVO: Catch para SQLException da conexão e operações de BD
+            } catch (SQLException e) {
                 System.err.println("Erro de banco de dados no ChatBotServlet: " + e.getMessage());
                 e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -473,7 +469,7 @@ public class ChatBotServlet extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 botResponse = "Ocorreu um erro interno. Por favor, tente novamente mais tarde.";
             } finally {
-                // >>> NOVO: Fechamento da conexão no bloco finally
+
                 try {
                     if (conn != null) {
                         conn.close();

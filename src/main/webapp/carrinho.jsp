@@ -86,7 +86,6 @@
                                             <img src="<%= livro.getCaminhoImagem() %>" alt="<%= livro.getTitulo() %>">
                                         </div>
                                         <div>
-                                            <p style="color: red;">ID do item: <%= item.getId() %></p>
                                             <div class="titulo-com-botao">
                                                 <h3 class="titulo"><%= livro.getTitulo() %></h3>
                                                 <form action="servlet" method="post" onsubmit="return confirmarExclusao('<%= item.getId() %>');">
@@ -151,7 +150,15 @@
                     <form action="servlet" method="post">
                         <input type="hidden" name="action" value="salvarPreviaPedido">
                         <input type="hidden" id="tipoFreteSelecionado" name="tipoFreteSelecionado" value="">
-                        <button type="submit" class="finalizar-compra-btn">Finalizar Compra</button>
+                        <button type="submit" id="finalizarCompraBtn" class="finalizar-compra-btn
+                            <% if (itensCarrinho.isEmpty()) { %>
+                                disabled-opaque
+                            <% } %>
+                        "
+                            <% if (itensCarrinho.isEmpty()) { %>
+                                disabled
+                            <% } %>
+                        >Finalizar Compra</button>
                     </form>
                 </div>
             </div>
@@ -163,9 +170,10 @@
     </script>
 
     <script>
-        const tempoLimiteInatividade = 1 * 60 * 1000;
+        const tempoLimiteInatividade = 5 * 1000;
         let tempoRestanteAtual = tempoLimiteInatividade;
         let temporizadorInterval;
+        let esvaziamentoInatividadeIniciado = false; // <-- Nova flag aqui!
 
         const elementoTempoRestante = document.getElementById('tempo-restante');
 
@@ -177,11 +185,16 @@
 
         function atualizarTemporizador() {
             tempoRestanteAtual -= 1000;
-            elementoTempoRestante.textContent = formatarTempo(tempoRestanteAtual);
+            if (elementoTempoRestante) {
+                elementoTempoRestante.textContent = formatarTempo(tempoRestanteAtual);
+            }
 
             if (tempoRestanteAtual <= 0) {
                 clearInterval(temporizadorInterval);
-                if (carrinhoTemItens) {
+
+                // Verifique a flag antes de executar a ação de inatividade
+                if (carrinhoTemItens && !esvaziamentoInatividadeIniciado) { // <-- Verificação da flag
+                    esvaziamentoInatividadeIniciado = true; // <-- Defina a flag como verdadeira
                     window.location.href = 'servlet?action=esvaziarCarrinhoInativo';
                     alert('Seu carrinho foi esvaziado devido a inatividade.');
                 }
@@ -191,9 +204,10 @@
         function resetarTemporizador() {
             clearInterval(temporizadorInterval);
             tempoRestanteAtual = tempoLimiteInatividade;
-            elementoTempoRestante.textContent = formatarTempo(tempoRestanteAtual);
+            if (elementoTempoRestante) { // Adicione esta verificação também aqui
+                elementoTempoRestante.textContent = formatarTempo(tempoRestanteAtual);
+            }
             iniciarTemporizador();
-            // Enviar um ping de atividade para o servidor (opcional)
             enviarPingAtividade();
         }
 
@@ -222,16 +236,35 @@
             let quantidadeAtual = parseInt(inputQuantidade.value);
             let novaQuantidade = quantidadeAtual + delta;
 
-            if (novaQuantidade >= 1) {
+            // Se a nova quantidade for 0, o item será removido.
+            // Ou se a quantidade for 1 e delta for -1, o item será removido.
+            const vaiRemoverItem = (novaQuantidade === 0 || (quantidadeAtual === 1 && delta === -1));
+
+            if (novaQuantidade >= 1 || vaiRemoverItem) { // Permite que a quantidade vá para 0 para remover
                 fetch(`servlet?action=alterarQuantidadeCarrinho&itemId=${itemId}&quantidade=${novaQuantidade}`)
                     .then(response => response.json())
                     .then(data => {
-                        inputQuantidade.value = novaQuantidade;
+                        if (novaQuantidade === 0) {
+                            // Se a quantidade se tornou 0, remova o item da UI
+                            const itemCarrinhoElement = botao.closest('.item-carrinho');
+                            if (itemCarrinhoElement) {
+                                itemCarrinhoElement.remove();
+                            }
+                        } else {
+                            inputQuantidade.value = novaQuantidade;
+                        }
+
                         const precoTotalItemElement = botao.parentNode.parentNode.querySelector('.preco-total');
-                        precoTotalItemElement.textContent = `Total: R$ ${data.precoTotalItem}`;
+                        if (precoTotalItemElement) { // Verificação para evitar erro se o elemento já foi removido
+                            precoTotalItemElement.textContent = `Total: R$ ${data.precoTotalItem}`;
+                        }
+
+                        // Atualiza o subtotal e total da compra
                         document.querySelector('.resumo-compra > p:first-child').textContent = `Subtotal: R$ ${data.subtotal}`;
                         document.getElementById('valorTotalCompra').textContent = `${data.totalCompra}`;
+
                         resetarTemporizador();
+                        atualizarEstadoBotaoFinalizarCompra(); // <--- CHAME AQUI!
                     })
                     .catch(error => {
                         console.error('Erro ao alterar a quantidade:', error);
@@ -275,6 +308,22 @@
 
         function confirmarExclusao(itemId) {
             return confirm("Tem certeza que deseja excluir este item do carrinho?");
+        }
+
+        function atualizarEstadoBotaoFinalizarCompra() {
+            const listaItensCarrinho = document.querySelector('.lista-de-itens-carrinho');
+            const itensVisiveis = listaItensCarrinho.querySelectorAll('.item-carrinho').length;
+            const finalizarCompraBtn = document.getElementById('finalizarCompraBtn');
+
+            if (finalizarCompraBtn) {
+                if (itensVisiveis === 0) {
+                    finalizarCompraBtn.disabled = true;
+                    finalizarCompraBtn.classList.add('disabled-opaque');
+                } else {
+                    finalizarCompraBtn.disabled = false;
+                    finalizarCompraBtn.classList.remove('disabled-opaque');
+                }
+            }
         }
     </script>
 </body>

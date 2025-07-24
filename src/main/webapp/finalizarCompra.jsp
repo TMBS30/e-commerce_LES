@@ -37,32 +37,6 @@
 <head>
     <title>Finalizar Compra | PageStation</title>
     <link rel="stylesheet" type="text/css" href="css/finalizarCompra.css?v=<%= System.currentTimeMillis()%>">
-    <style>
-        .link-adicionar {
-            display: block;
-            margin-top: 10px;
-            color: blue;
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .link-adicionar:hover {
-            color: darkblue;
-        }
-        /* Estilo para a informação do troco */
-        .troco-info {
-            font-weight: bold;
-            color: green;
-            margin-top: 10px;
-            border-top: 1px solid #eee; /* Opcional: para separar visualmente */
-            padding-top: 10px;
-        }
-        .troco-info small {
-            display: block;
-            font-size: 0.8em;
-            color: #666;
-            font-weight: normal;
-        }
-    </style>
 </head>
 <body>
     <header>
@@ -83,10 +57,6 @@
                 <input class="input-pesquisa"type="text" name="pesquisa_livro" id="pesquisa_livro" placeholder="Procurar livro...">
             </div>
 
-            <a href="#" class="link-categorias">
-                <p class="categorias">Categorias</p>
-            </a>
-
             <a href="servlet?action=exibirPedidos" class="link-pedidos">
                 <p class="pedidos">Pedidos</p>
             </a>
@@ -103,7 +73,7 @@
         <div class="container">
             <h2>Finalizar Compra</h2>
 
-            <form action="servlet" method="post">
+            <form action="servlet" method="post" id="finalizarCompraForm">
                 <input type="hidden" name="action" value="confirmarCompra">
                 <input type="hidden" name="idCliente" value="<%= clienteId %>">
                 <div class="itens">
@@ -181,7 +151,12 @@
                         if (cartoesSelecionados != null && !cartoesSelecionados.isEmpty()) {
                             for (Cartao cartao : cartoesSelecionados) {
                     %>
-                        <p>Cartao final <%= cartao.getNumero().substring(cartao.getNumero().length() - 4) %> - <%= cartao.getBandeiraCartao().getDescricao() %></p>
+                        <div class="card-payment-item">
+                            <p>Cartao final: <%= cartao.getNumero().substring(cartao.getNumero().length() - 4) %> - <%= cartao.getBandeiraCartao().getDescricao() %></p>
+                            <input type="hidden" name="idsCartoes" value="<%= cartao.getId() %>">
+                            <label for="valorCartao_<%= cartao.getId() %>">Valor (R$):</label>
+                            <input type="number" step="0.01" min="0" name="valorPagoCartao_<%= cartao.getId() %>" id="valorCartao_<%= cartao.getId() %>" class="input-valor-cartao" required>
+                        </div>
                     <%
                             }
                         } else {
@@ -190,6 +165,7 @@
                     <%
                         }
                     %>
+                    <div id="payment-error-message" class="card-payment-error">A soma dos valores dos cartoes nao corresponde ao total da compra.</div>
                     <a href="servlet?action=cartaoCompra" class="link-adicionar">Adicionar/Trocar Cartao</a>
 
                     <h3>Resumo</h3>
@@ -210,7 +186,7 @@
                     <% } %>
                     <%-- --- FIM MODIFICAÇÕES --- --%>
 
-                    <p><strong>Total: R$ <%= df.format(totalFinal) %></strong></p>
+                    <p><strong>Total: R$ <span id="totalFinalDisplay"><%= df.format(totalFinal) %></span></strong></p>
 
                     <%-- **NOVO: Exibição do Troco** --%>
                     <% if (valorTrocoGerado > 0.0) { %>
@@ -225,7 +201,7 @@
                     <input type="hidden" name="valorFrete" value="<%= valorFreteSessao %>">
                     <input type="hidden" name="valorDescontoPromocional" value="<%= descontoPromocional %>">
                     <input type="hidden" name="valorDescontoTroca" value="<%= descontoTroca %>">
-                    <input type="hidden" name="valorTotal" value="<%= totalFinal %>">
+                    <input type="hidden" name="valorTotal" id="valorTotalHidden" value="<%= totalFinal %>">
                     <%-- **NOVO: Passa o valor do troco também no hidden input, se necessário no backend** --%>
                     <input type="hidden" name="valorTrocoGerado" value="<%= valorTrocoGerado %>">
                     <%-- **FIM NOVO** --%>
@@ -252,10 +228,79 @@
                         }
                     %>
 
-                    <button type="submit">Confirmar Compra</button>
+                    <button type="submit" name="confirmar-button" id="confirmarCompraBtn">Confirmar Compra</button>
                 </div>
             </form>
         </div>
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('finalizarCompraForm');
+            const confirmarBtn = document.getElementById('confirmarCompraBtn');
+            const valorCartaoInputs = document.querySelectorAll('.input-valor-cartao');
+            const totalFinalDisplay = document.getElementById('totalFinalDisplay');
+            const valorTotalHidden = document.getElementById('valorTotalHidden');
+            const paymentErrorMessage = document.getElementById('payment-error-message');
+
+            // Converte o total final para número, garantindo que seja um ponto decimal
+            const totalCompra = parseFloat(valorTotalHidden.value);
+
+            function validarPagamento() {
+                let somaValoresCartoes = 0;
+                valorCartaoInputs.forEach(input => {
+                    somaValoresCartoes += parseFloat(input.value || 0); // Soma os valores, tratando input vazio como 0
+                });
+
+                // Arredonda para evitar problemas com ponto flutuante
+                somaValoresCartoes = parseFloat(somaValoresCartoes.toFixed(2));
+
+                if (somaValoresCartoes !== totalCompra) {
+                    paymentErrorMessage.style.display = 'block';
+                    confirmarBtn.disabled = true; // Desabilita o botão se a soma estiver incorreta
+                } else {
+                    paymentErrorMessage.style.display = 'none';
+                    confirmarBtn.disabled = false; // Habilita o botão
+                }
+            }
+
+            // Adiciona um listener para cada input de valor de cartão
+            valorCartaoInputs.forEach(input => {
+                input.addEventListener('input', validarPagamento);
+            });
+
+            // Adiciona um listener para o submit do formulário
+            form.addEventListener('submit', function(event) {
+                // Chama a validação uma última vez antes de submeter
+                validarPagamento();
+                if (confirmarBtn.disabled) {
+                    event.preventDefault(); // Impede o envio do formulário se a validação falhar
+                    alert('Por favor, ajuste os valores dos cartoes. A soma deve corresponder ao total da compra.');
+                }
+            });
+
+            if (valorCartaoInputs.length > 0 && totalCompra > 0) {
+                if (valorCartaoInputs.length === 1) {
+                    valorCartaoInputs[0].value = totalCompra.toFixed(2);
+                } else {
+                    // Distribui o valor igualmente, arredondando para duas casas decimais
+                    const valorPorCartao = (totalCompra / valorCartaoInputs.length).toFixed(2);
+                    valorCartaoInputs.forEach(input => {
+                        input.value = valorPorCartao;
+                    });
+                    // Ajuste para o último cartão para cobrir a diferença de arredondamento
+                    let somaDistribuida = 0;
+                    for (let i = 0; i < valorCartaoInputs.length - 1; i++) {
+                        somaDistribuida += parseFloat(valorCartaoInputs[i].value);
+                    }
+                    const valorUltimoCartao = (totalCompra - somaDistribuida).toFixed(2);
+                    valorCartaoInputs[valorCartaoInputs.length - 1].value = valorUltimoCartao;
+                }
+            }
+
+            // Executa a validação inicial quando a página carrega
+            validarPagamento();
+        });
+    </script>
 </body>
 </html>
